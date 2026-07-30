@@ -144,3 +144,36 @@ body {
     margin-left: -40px; /* Junta las cartas */
 }
 
+/*------------------------estilo de cartas del rival---------------------------*/
+
+.oponent-hand-cards {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Alinea las bases de las cartas */
+    height: 250px;
+    background-color: #34495e;
+}
+
+.left-card .medium-card .right-card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border: 2px solid #ccc;
+    transition: transform 0.2s ease; /* Suaviza el efecto al pasar el mouse */
+
+    /* Punto de anclaje inferior central para la rotación */
+    transform-origin: bottom center; 
+}
+
+.left-card{
+    transform: rotate(-15deg);
+    margin-right: -40px; /* Junta las cartas */
+}
+
+.medium-card{
+    transform: rotate(0deg);
+    z-index: 2; /* Mantiene la carta del centro al frente */
+}
+
+.right-card{
+    transform: rotate(15deg);
+    margin-left: -40px; /* Junta las cartas */
+}

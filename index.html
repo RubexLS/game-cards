@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Document</title>
+</head>
+<body>
+    <!--
+    <section id="menuPlayer">
+        <h1 class="title">Virus!</h1>
+        <div class="menu">
+            <button onClick="startGame()">Singleplayer</button>
+            <button>Multiplayer</button>
+            <button>Options</button>
+            <button>credits</button>
+        </div>
+    </section>
+    -->
+
+    <main class="game-container">
+        <section class="description">description card's</section>
+
+        <section class="map-game">
+            <!-- Mano del adversario -->
+            <div class="oponent-hand">mano rival</div>
+
+            <!-- Cuerpo del adversario -->
+            <div class="oponent-body">cuerpo rival</div>
+
+            <!-- Sectores de la Mesa -->
+            <div class="board">
+                <div class="zone" id="deck-zone">
+                    <h2>Mazo</h2>
+                    <div class="card deck" id="deck">🎴<br><span id="deck-count">10</span></div>
+                </div>
+            
+                <div class="zone" id="exile-zone">
+                    <h2>Destierro</h2>
+                    <div class="card-slot" id="exile-slot">Vacio</div>
+                </div>
+            
+                <div class="zone" id="discard-zone">
+                    <h2>Descarte</h2>
+                    <div class="card-slot" id="discard-slot">Vacio</div>
+                </div>
+            </div>
+            
+            <!-- Cuerpo del Jugador -->
+            <div class="player-body">cuerpo del jugador</div>
+
+            <!-- Mano del Jugador -->
+            <div class="player-hand-cards">
+                <div class="hand" id="player-hand"></div>
+            </div>
+        </section>
+
+        <section class="options">option card's</section>
+    </main>
+
+    <script src="js/animations.js"></script>
+
+</body>
+</html>

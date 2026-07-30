@@ -1,0 +1,146 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+/*    background-color: #2c3e50;
+    color: #ecf0f1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;*/
+}
+
+.game-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr; /* Tamaños de las 3 columnas */
+    gap: 10px;
+}
+
+.map-game {
+    display: grid;
+    grid-template-rows: repeat(5, 1fr); /* Divide el medio en 5 filas */
+    gap: 5px;
+}
+
+/*---------------------------------------------------------------------*/
+
+.board {
+    display: flex;
+    justify-content: space-around;
+    background-color: #1a252f;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #34495e;
+}
+
+.zone {
+    text-align: center;
+}
+
+.zone h2, .player-hand-cards h2 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #bdc3c7;
+}
+
+
+.card-slot, .card {
+    width: 100px;
+    height: 140px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    user-select: none;
+}
+
+.card-slot {
+    border: 2px dashed #7f8c8d;
+    color: #7f8c8d;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.card {
+    background-color: #fff;
+    color: #333;
+    border: 2px solid #ccc;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    flex-direction: column;
+    font-size: 1.2rem;
+}
+
+.card.deck {
+    background-color: #c0392b;
+    color: white;
+    cursor: pointer;
+    border-color: #962d22;
+}
+
+.card.deck:hover {
+    background-color: #e74c3c;
+}
+
+/*--------------------MANO DEL JUGADOR-----------------------------------------*/
+
+.hand {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    min-height: 150px;
+    background-color: #34495e;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.hand .card {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.hand .card:hover {
+    /*transform: translateY(-10px);
+    border-color: #3498db;*/
+    transform: translateY(-20px) scale(1.05);
+    z-index: 10; /* Trae la carta seleccionada al frente */
+    cursor: pointer;
+}
+
+/*------------------------estilo de cartas en mano---------------------------*/
+
+.player-hand-cards {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Alinea las bases de las cartas */
+    height: 250px;
+    background-color: #34495e;
+}
+
+.left-card .medium-card .right-card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border: 2px solid #ccc;
+    transition: transform 0.2s ease; /* Suaviza el efecto al pasar el mouse */
+
+    /* Punto de anclaje inferior central para la rotación */
+    transform-origin: bottom center; 
+}
+
+.left-card{
+    transform: rotate(-15deg);
+    margin-right: -40px; /* Junta las cartas */
+}
+
+.medium-card{
+    transform: rotate(0deg);
+    z-index: 2; /* Mantiene la carta del centro al frente */
+}
+
+.right-card{
+    transform: rotate(15deg);
+    margin-left: -40px; /* Junta las cartas */
+}
+

@@ -1,8 +1,12 @@
 // Base de datos de ejemplo para el mazo
-const cardPool = ["🔥 A", "💧 B", "🌿 C", "⚡ D", "💀 E", "☀️ F", "👁️ G", "❄️ H", "🌪️ I", "⛰️ J"];
+// const cardPool = ["🔥 A", "💧 B", "🌿 C", "⚡ D", "💀 E", "☀️ F", "👁️ G", "❄️ H", "🌪️ I", "⛰️ J"];
+import Cards, { deckGame } from './game.js';
+Cards.buildDeck();
+Cards.mingle();
 
+// const cardPool = deck;
 // Estado del juego
-let deck = [...cardPool];
+let deck = [...deckGame]; // Copia del mazo para el juego actual
 let playerHand = [];
 let oponentHand = [];
 let exileZone = [];

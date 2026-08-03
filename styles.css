@@ -177,3 +177,9 @@ body {
     transform: rotate(15deg);
     margin-left: -40px; /* Junta las cartas */
 }
+
+/* bloquea las manos-------------------------------------------------------*/
+.disabled{
+    pointer-events: none; 
+    opacity: 0.6; /* Opcional: da un efecto visual de que la mano está desactivada */
+}

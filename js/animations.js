@@ -1,13 +1,13 @@
 // Base de datos de ejemplo para el mazo
 // const cardPool = ["🔥 A", "💧 B", "🌿 C", "⚡ D", "💀 E", "☀️ F", "👁️ G", "❄️ H", "🌪️ I", "⛰️ J"];
-import { Cards } from './game.js';
+import { Cards, renderHandPlayer } from './game.js';
 Cards.buildDeck();
 Cards.mingle();
 
 // Estado del juego
 let deck = [...Cards.deck]; // Copia del mazo para el juego actual
-let playerHand = [];
-let oponentHand = [];
+export let playerHand = [];
+export let oponentHand = [];
 let exileZone = [];
 let discardZone = []; // Listo para uso futuro si agregas más mecánicas
 
@@ -16,60 +16,31 @@ let status = true;
 // Elementos del DOM
 const deckElement = document.getElementById('deck');
 const deckCountElement = document.getElementById('deck-count');
-const playerHandElement = document.getElementById('player-hand');
-const oponentHandElement = document.getElementById('oponent-hand');
+export const playerHandElement = document.getElementById('player-hand');
+export const oponentHandElement = document.getElementById('oponent-hand');
 const exileSlot = document.getElementById('exile-slot');
 const buttonElement = document.getElementById('turn');
+const buttonStartGame = document.getElementById('startGame');
 
 // Función para actualizar la interfaz visual de la mano
-function renderHand() {
-    // let status = false;
-    if(status){
-        playerHandElement.innerHTML = '';
-        playerHand.forEach((card, index) => {
-            const cardDiv = document.createElement('div');
-            switch (index) {
-                case 0:
-                    cardDiv.className = 'card left-card';
-                    break;
-                case 1:
-                    cardDiv.className = 'card medium-card';
-                    break;
-                case 2:
-                    cardDiv.className = 'card right-card';
-                    break;
-            }
-            cardDiv.innerText = card.name;
-            cardDiv.style.backgroundImage = `url(${card.cardPhoto.src})`;
-            cardDiv.style.backgroundSize = "cover";
-            // Al hacer clic en una carta de la mano, se destierra
-            cardDiv.addEventListener('click', () => exileCard(index, `url(${card.cardPhoto.src})`));
-            playerHandElement.appendChild(cardDiv);
-        });
-    }else{
-        oponentHandElement.innerHTML = '';
-        oponentHand.forEach((card, index) => {
-            const cardDiv = document.createElement('div');
-            switch (index) {
-                case 0:
-                    cardDiv.className = 'card left-card';
-                    break;
-                case 1:
-                    cardDiv.className = 'card medium-card';
-                    break;
-                case 2:
-                    cardDiv.className = 'card right-card';
-                    break;
-            }
-            cardDiv.innerText = card.name;
-            cardDiv.style.backgroundImage = `url(${card.cardPhoto.src})`;
-            cardDiv.style.backgroundSize = "cover";
-            // Al hacer clic en una carta de la mano, se destierra
-            cardDiv.addEventListener('click', () => exileCard(index, `url(${card.cardPhoto.src})`));
-            oponentHandElement.appendChild(cardDiv);
-        });
-    }
+function renderHand(keyword) {
+    if (keyword === 'firstTurn') {
+        playerHandElement.classList.remove('disabled');
+        oponentHandElement.classList.remove('disabled');
+        
+        renderHandPlayer(playerHand, playerHandElement);
+        renderHandPlayer(oponentHand, oponentHandElement);
 
+        oponentHandElement.classList.add('disabled');
+    }else if(status){
+        playerHandElement.classList.remove('disabled');
+        renderHandPlayer(playerHand, playerHandElement);
+        oponentHandElement.classList.add('disabled');
+    }else if(!status){
+        oponentHandElement.classList.remove('disabled');
+        renderHandPlayer(oponentHand, oponentHandElement);
+        playerHandElement.classList.add('disabled');
+    }
 }
 
 // Función para actualizar los contadores y zonas de la mesa
@@ -83,7 +54,8 @@ function renderBoard(cardImage) {
 
     if (exileZone.length > 0) {
         exileSlot.className = 'card';
-        exileSlot.innerText = exileZone[exileZone.length - 1];
+        exileSlot.innerText = '';
+        // exileSlot.innerText = exileZone[exileZone.length - 1]; // nombres de las cartas
         exileSlot.style.backgroundImage = cardImage;
         exileSlot.style.backgroundSize = "cover";
     } else {
@@ -120,20 +92,16 @@ function drawCard() {
 }
 
 // Lógica para desterrar una carta de la mano
-function exileCard(cardIndex, cardImage) {
+export function exileCard(cardIndex, cardImage) {
     if(status){
         const excludedCard = playerHand.splice(cardIndex, 1)[0];
         exileZone.push(excludedCard.name);
-
-        renderHand();
-        renderBoard(cardImage);
     }else{
         const excludedCard = oponentHand.splice(cardIndex, 1)[0];
         exileZone.push(excludedCard.name);
-
-        renderHand();
-        renderBoard(cardImage);
     }
+    renderHand();
+    renderBoard(cardImage);
 }
 
 // Evento para hacer clic en el mazo
@@ -143,6 +111,22 @@ deckElement.addEventListener('click', drawCard);
 buttonElement.addEventListener('click', () => {
     status = !status;
     renderHand();
+});
+
+buttonStartGame.addEventListener('click', () => {
+    let keyword = 'firstTurn';
+    
+    for(let i=0; i<3; i++){    
+        const nextCardPlayer = deck.pop();
+        playerHand.push(nextCardPlayer);
+        const nextCardOponent = deck.pop();
+        oponentHand.push(nextCardOponent);
+    }
+
+    buttonStartGame.disabled = true;
+
+    renderHand(keyword);
+    renderBoard();
 });
 
 // Inicializar el juego visualmente

@@ -55,3 +55,29 @@ let glove = new Cards('glove', './assets/glove.png', 1, 'treatment', 'purple');
 let medicalError = new Cards('medical_error', './assets/medical_error.png', 1, 'treatment', 'purple');
 
 export { Cards };
+
+import { exileCard, oponentHand, playerHand, playerHandElement, oponentHandElement } from './animations.js';
+
+export function renderHandPlayer(currentPLayer, contenedorHTML) {
+    contenedorHTML.innerHTML = '';
+    currentPLayer.forEach((card, index) => {
+        const cardDiv = document.createElement('div');
+        switch (index) {
+            case 0:
+                cardDiv.className = 'card left-card';
+                break;
+            case 1:
+                cardDiv.className = 'card medium-card';
+                break;
+            case 2:
+                cardDiv.className = 'card right-card';
+                break;
+        }
+        // cardDiv.innerText = card.name; // nombre de las cartas
+        cardDiv.style.backgroundImage = `url(${card.cardPhoto.src})`;
+        cardDiv.style.backgroundSize = "cover";
+        // Al hacer clic en una carta de la mano, se destierra
+        cardDiv.addEventListener('click', () => exileCard(index, `url(${card.cardPhoto.src})`));
+        contenedorHTML.appendChild(cardDiv);  
+    });
+}

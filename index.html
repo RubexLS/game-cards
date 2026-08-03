@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="./styles.css">
     <!-- <script type="module" src="./js/game.js"></script> -->
     <script type="module" src="./js/animations.js"></script>
+    <!-- <script type="module" src="./js/game.js"></script> -->
     <title>Document</title>
 </head>
 <body>
@@ -22,7 +23,9 @@
     -->
 
     <main class="game-container">
-        <section class="description">description card's</section>
+        <section class="description">
+            <button id="startGame">Iniciar juego</button>
+        </section>
 
         <section class="map-game">
             <!-- Mano del adversario -->
@@ -42,7 +45,7 @@
             
                 <div class="zone" id="exile-zone">
                     <h2>Destierro</h2>
-                    <div class="card-slot" id="exile-slot">Vacio</div>
+                    <div class="card-slot" id="exile-slot"></div>
                 </div>
             
                 <div class="zone" id="discard-zone">

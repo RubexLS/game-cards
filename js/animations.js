@@ -1,12 +1,11 @@
 // Base de datos de ejemplo para el mazo
 // const cardPool = ["🔥 A", "💧 B", "🌿 C", "⚡ D", "💀 E", "☀️ F", "👁️ G", "❄️ H", "🌪️ I", "⛰️ J"];
-import Cards, { deckGame } from './game.js';
+import { Cards } from './game.js';
 Cards.buildDeck();
 Cards.mingle();
 
-// const cardPool = deck;
 // Estado del juego
-let deck = [...deckGame]; // Copia del mazo para el juego actual
+let deck = [...Cards.deck]; // Copia del mazo para el juego actual
 let playerHand = [];
 let oponentHand = [];
 let exileZone = [];
@@ -32,19 +31,19 @@ function renderHand() {
             switch (index) {
                 case 0:
                     cardDiv.className = 'card left-card';
-                    cardDiv.innerText = card;
                     break;
                 case 1:
                     cardDiv.className = 'card medium-card';
-                    cardDiv.innerText = card;
                     break;
                 case 2:
                     cardDiv.className = 'card right-card';
-                    cardDiv.innerText = card;
                     break;
             }
+            cardDiv.innerText = card.name;
+            cardDiv.style.backgroundImage = `url(${card.cardPhoto.src})`;
+            cardDiv.style.backgroundSize = "cover";
             // Al hacer clic en una carta de la mano, se destierra
-            cardDiv.addEventListener('click', () => exileCard(index));
+            cardDiv.addEventListener('click', () => exileCard(index, `url(${card.cardPhoto.src})`));
             playerHandElement.appendChild(cardDiv);
         });
     }else{
@@ -54,19 +53,19 @@ function renderHand() {
             switch (index) {
                 case 0:
                     cardDiv.className = 'card left-card';
-                    cardDiv.innerText = card;
                     break;
                 case 1:
                     cardDiv.className = 'card medium-card';
-                    cardDiv.innerText = card;
                     break;
                 case 2:
                     cardDiv.className = 'card right-card';
-                    cardDiv.innerText = card;
                     break;
             }
+            cardDiv.innerText = card.name;
+            cardDiv.style.backgroundImage = `url(${card.cardPhoto.src})`;
+            cardDiv.style.backgroundSize = "cover";
             // Al hacer clic en una carta de la mano, se destierra
-            cardDiv.addEventListener('click', () => exileCard(index));
+            cardDiv.addEventListener('click', () => exileCard(index, `url(${card.cardPhoto.src})`));
             oponentHandElement.appendChild(cardDiv);
         });
     }
@@ -74,7 +73,7 @@ function renderHand() {
 }
 
 // Función para actualizar los contadores y zonas de la mesa
-function renderBoard() {
+function renderBoard(cardImage) {
     deckCountElement.innerText = deck.length;
     
     if (deck.length === 0) {
@@ -85,6 +84,8 @@ function renderBoard() {
     if (exileZone.length > 0) {
         exileSlot.className = 'card';
         exileSlot.innerText = exileZone[exileZone.length - 1];
+        exileSlot.style.backgroundImage = cardImage;
+        exileSlot.style.backgroundSize = "cover";
     } else {
         exileSlot.className = 'card-slot';
         exileSlot.innerText = 'Vacío';
@@ -93,50 +94,45 @@ function renderBoard() {
 
 // Lógica para robar una carta
 function drawCard() {
-    if(status){
-        if (deck.length === 0) {
-            alert("¡No quedan cartas en el mazo!");
-            return;
-        }
-        if (playerHand.length >= 3) {
-            alert("Tu mano ya está llena (máximo 3 cartas). ¡Debes desterrar una primero!");
-            return;
-        }
+    let currentPLayer;
 
-        const nextCard = deck.pop();
-        playerHand.push(nextCard);
-    }else{
-        if (deck.length === 0) {
-            alert("¡No quedan cartas en el mazo!");
-            return;
-        }
-        if (oponentHand.length >= 3) {
-            alert("Tu mano ya está llena (máximo 3 cartas). ¡Debes desterrar una primero!");
-            return;
-        }
-
-        const nextCard = deck.pop();
-        oponentHand.push(nextCard);
+    if (deck.length === 0) {
+        alert("¡No quedan cartas en el mazo!");
+        return;
     }
+
+    if(status){
+        currentPLayer = playerHand;
+    }else{
+        currentPLayer = oponentHand;
+    }
+    
+    if (currentPLayer.length >= 3) {
+        alert("Tu mano ya está llena (máximo 3 cartas). ¡Debes desterrar una primero!");
+        return;
+    }
+
+    const nextCard = deck.pop();
+    currentPLayer.push(nextCard);
 
     renderHand();
     renderBoard();
 }
 
 // Lógica para desterrar una carta de la mano
-function exileCard(cardIndex) {
+function exileCard(cardIndex, cardImage) {
     if(status){
         const excludedCard = playerHand.splice(cardIndex, 1)[0];
-        exileZone.push(excludedCard);
+        exileZone.push(excludedCard.name);
 
         renderHand();
-        renderBoard();
+        renderBoard(cardImage);
     }else{
         const excludedCard = oponentHand.splice(cardIndex, 1)[0];
-        exileZone.push(excludedCard);
+        exileZone.push(excludedCard.name);
 
         renderHand();
-        renderBoard();
+        renderBoard(cardImage);
     }
 }
 
@@ -146,6 +142,7 @@ deckElement.addEventListener('click', drawCard);
 // cambio de turno
 buttonElement.addEventListener('click', () => {
     status = !status;
+    renderHand();
 });
 
 // Inicializar el juego visualmente

@@ -6,7 +6,7 @@ class Cards {
         this.name = name
         Cards.typeCards.push(this)
         this.cardPhoto = new Image()
-        this.itemPhoto.src = cardPhoto
+        this.cardPhoto.src = cardPhoto
         this.amount = amount
         this.type = type
         this.color = color
@@ -17,7 +17,7 @@ class Cards {
     static buildDeck(){
         Cards.typeCards.forEach(card => {
             for(let i = 0; i < card.amount; i++){
-                Cards.deck.push(object.create(card));
+                Cards.deck.push({ ...card });
             }
         });
     }
@@ -52,6 +52,6 @@ let contagion = new Cards('contagion', './assets/contagion.png', 2, 'treatment',
 let thief = new Cards('thief', './assets/thief.png', 3, 'treatment', 'purple');
 let transplant = new Cards('transplant', './assets/transplant.png', 3, 'treatment', 'purple');
 let glove = new Cards('glove', './assets/glove.png', 1, 'treatment', 'purple');
-let medicalError = new Cards('medical_error', './assets/medical-error.png', 1, 'treatment', 'purple');
+let medicalError = new Cards('medical_error', './assets/medical_error.png', 1, 'treatment', 'purple');
 
-export const deckGame = Cards.deck;
+export { Cards };

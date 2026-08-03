@@ -56,7 +56,16 @@ let medicalError = new Cards('medical_error', './assets/medical_error.png', 1, '
 
 export { Cards };
 
-import { exileCard, oponentHand, playerHand, playerHandElement, oponentHandElement } from './animations.js';
+import { status, oponentHand, playerHand, playerHandElement, exileZone, oponentHandElement , renderBoard, renderHand} from './ui.js';
+
+let bodyZone = [];
+
+const options = document.getElementById('options');
+const organBrain = document.getElementById('brain-slot');
+const organHeart = document.getElementById('heart-slot');
+const organStomach = document.getElementById('stomach-slot');
+const organBone = document.getElementById('bone-slot');
+const organNervous = document.getElementById('nervous-slot');
 
 export function renderHandPlayer(currentPLayer, contenedorHTML) {
     contenedorHTML.innerHTML = '';
@@ -77,7 +86,78 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
         cardDiv.style.backgroundImage = `url(${card.cardPhoto.src})`;
         cardDiv.style.backgroundSize = "cover";
         // Al hacer clic en una carta de la mano, se destierra
-        cardDiv.addEventListener('click', () => exileCard(index, `url(${card.cardPhoto.src})`));
+        cardDiv.addEventListener('click', () => {
+            options.innerHTML = '';
+            const optionUse = document.createElement('button');
+            optionUse.className = 'option use';
+            optionUse.innerText = 'Usar';
+            
+            const optionDiscard = document.createElement('button');
+            optionDiscard.className = 'option discard';
+            optionDiscard.innerText = 'Descartar';
+            
+            options.appendChild(optionUse);
+            options.appendChild(optionDiscard);
+
+            const buttonDiscard = document.getElementsByClassName('discard')[0];
+
+            buttonDiscard.addEventListener('click', () => {
+                exileCard(index, `url(${card.cardPhoto.src})`);
+                options.innerHTML = '';
+            });
+
+            const buttonUse = document.getElementsByClassName('use')[0];
+
+            buttonUse.addEventListener('click', () => {
+                useCard(index, `url(${card.cardPhoto.src})`);
+                options.innerHTML = '';
+            });
+        });
         contenedorHTML.appendChild(cardDiv);  
     });
+}
+
+function exileCard(cardIndex, cardImage) {
+    if(status){
+        const excludedCard = playerHand.splice(cardIndex, 1)[0];
+        exileZone.push(excludedCard.name);
+    }else{
+        const excludedCard = oponentHand.splice(cardIndex, 1)[0];
+        exileZone.push(excludedCard.name);
+    }
+    renderHand();
+    renderBoard(cardImage);
+}
+
+function useCard(cardIndex, cardImage) {
+    const organCard = playerHand.splice(cardIndex, 1)[0];
+    bodyZone.push(organCard.name);
+
+    renderHand()
+    renderBody(cardImage);
+}
+
+function renderBody(cardImage){
+    switch (bodyZone[bodyZone.length - 1]) {
+        case 'brain':
+            organBrain.style.backgroundImage = cardImage;
+            organBrain.style.backgroundSize = 'cover';
+            break;
+        case 'heart':
+            organHeart.style.backgroundImage = cardImage;
+            organHeart.style.backgroundSize = 'cover';
+            break;
+        case 'stomach':
+            organStomach.style.backgroundImage = cardImage;
+            organStomach.style.backgroundSize = 'cover';
+            break;
+        case 'bone':
+            organBone.style.backgroundImage = cardImage;
+            organBone.style.backgroundSize = 'cover';
+            break;
+        case 'nervousSystem':
+            organNervous.style.backgroundImage = cardImage;
+            organNervous.style.backgroundSize = 'cover';
+            break;
+    }
 }

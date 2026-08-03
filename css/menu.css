@@ -1,0 +1,33 @@
+#menuPlayer {
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.title {
+    font-size: 130px;
+    color: white;
+    margin: 65px 0;
+    align-items: center;
+}
+
+.menu button {
+    font-family: "Pixelify Sans", sans-serif;
+    margin: 10px;
+    font-size: 50px;
+    background-color: black;
+    color: white;
+    
+}
+
+.menu button:hover {
+    color: yellow;
+}

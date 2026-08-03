@@ -1,17 +1,33 @@
-// Base de datos de ejemplo para el mazo
-// const cardPool = ["🔥 A", "💧 B", "🌿 C", "⚡ D", "💀 E", "☀️ F", "👁️ G", "❄️ H", "🌪️ I", "⛰️ J"];
 import { Cards, renderHandPlayer } from './game.js';
-Cards.buildDeck();
-Cards.mingle();
 
-// Estado del juego
-let deck = [...Cards.deck]; // Copia del mazo para el juego actual
+export function iniciarJuego() {
+    // 1. Construir y mezclar el mazo al arrancar
+    Cards.buildDeck();
+    Cards.mingle();
+    deck = [...Cards.deck]; // Asignamos las cartas al mazo actual
+
+    // 2. Repartir la mano inicial automáticamente (3 cartas a cada uno)
+    let keyword = 'firstTurn';
+    for(let i=0; i<3; i++){    
+        const nextCardPlayer = deck.pop();
+        playerHand.push(nextCardPlayer);
+        const nextCardOponent = deck.pop();
+        oponentHand.push(nextCardOponent);
+    }
+
+    // 3. Dibujar el tablero por primera vez
+    renderHand(keyword);
+    renderBoard();
+    
+    console.log("¡Partida inicializada con éxito!");
+}
+
 export let playerHand = [];
 export let oponentHand = [];
-let exileZone = [];
+export let exileZone = [];
 let discardZone = []; // Listo para uso futuro si agregas más mecánicas
 
-let status = true;
+export let status = true;
 
 // Elementos del DOM
 const deckElement = document.getElementById('deck');
@@ -23,7 +39,7 @@ const buttonElement = document.getElementById('turn');
 const buttonStartGame = document.getElementById('startGame');
 
 // Función para actualizar la interfaz visual de la mano
-function renderHand(keyword) {
+export function renderHand(keyword) {
     if (keyword === 'firstTurn') {
         playerHandElement.classList.remove('disabled');
         oponentHandElement.classList.remove('disabled');
@@ -44,7 +60,7 @@ function renderHand(keyword) {
 }
 
 // Función para actualizar los contadores y zonas de la mesa
-function renderBoard(cardImage) {
+export function renderBoard(cardImage) {
     deckCountElement.innerText = deck.length;
     
     if (deck.length === 0) {
@@ -91,19 +107,6 @@ function drawCard() {
     renderBoard();
 }
 
-// Lógica para desterrar una carta de la mano
-export function exileCard(cardIndex, cardImage) {
-    if(status){
-        const excludedCard = playerHand.splice(cardIndex, 1)[0];
-        exileZone.push(excludedCard.name);
-    }else{
-        const excludedCard = oponentHand.splice(cardIndex, 1)[0];
-        exileZone.push(excludedCard.name);
-    }
-    renderHand();
-    renderBoard(cardImage);
-}
-
 // Evento para hacer clic en el mazo
 deckElement.addEventListener('click', drawCard);
 
@@ -112,22 +115,3 @@ buttonElement.addEventListener('click', () => {
     status = !status;
     renderHand();
 });
-
-buttonStartGame.addEventListener('click', () => {
-    let keyword = 'firstTurn';
-    
-    for(let i=0; i<3; i++){    
-        const nextCardPlayer = deck.pop();
-        playerHand.push(nextCardPlayer);
-        const nextCardOponent = deck.pop();
-        oponentHand.push(nextCardOponent);
-    }
-
-    buttonStartGame.disabled = true;
-
-    renderHand(keyword);
-    renderBoard();
-});
-
-// Inicializar el juego visualmente
-renderBoard();

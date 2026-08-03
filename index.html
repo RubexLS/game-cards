@@ -3,28 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./styles.css">
-    <!-- <script type="module" src="./js/game.js"></script> -->
-    <script type="module" src="./js/animations.js"></script>
-    <!-- <script type="module" src="./js/game.js"></script> -->
+    <link rel="stylesheet" href="./css/game.css">
+    <link rel="stylesheet" href="./css/menu.css">
+    <script type="module" src="./js/main.js"></script>
+    <!-- <script type="module" src="./js/ui.js"></script> -->
     <title>Document</title>
 </head>
 <body>
-    <!--
-    <section id="menuPlayer">
+    
+    <section id="menu">
         <h1 class="title">Virus!</h1>
         <div class="menu">
-            <button onClick="startGame()">Singleplayer</button>
+            <button id="play">Singleplayer</button>
             <button>Multiplayer</button>
             <button>Options</button>
             <button>credits</button>
         </div>
     </section>
-    -->
+    
 
-    <main class="game-container">
-        <section class="description">
-            <button id="startGame">Iniciar juego</button>
+    <main class="game-container" id="viewMap" style="display: none;">
+        <section class="bodyGame">
+                <div id="brain-slot">asdas</div>
+                <div id="heart-slot">asda</div>
+                <div id="stomach-slot">adsda</div>
+                <div id="bone-slot">asdasd</div>
+                <div id="nervous-slot">adsd</div>
+                <div ></div>
         </section>
 
         <section class="map-game">
@@ -34,7 +39,7 @@
             </div>
 
             <!-- Cuerpo del adversario -->
-            <div class="oponent-body">cuerpo rival</div>
+            <!-- <div class="oponent-body">cuerpo rival</div> -->
 
             <!-- Sectores de la Mesa -->
             <div class="board">
@@ -55,7 +60,7 @@
             </div>
             
             <!-- Cuerpo del Jugador -->
-            <div class="player-body">cuerpo del jugador</div>
+            <!-- <div class="player-body">cuerpo del jugador</div> -->
 
             <!-- Mano del Jugador -->
             <div class="player-hand-cards">
@@ -63,12 +68,11 @@
             </div>
         </section>
 
-        <section class="options">
+        <section class="bodyRivals" Id="rivals">
             <button id="turn">final del turno</button>
         </section>
     </main>
 
-    <!-- <script src="js/animations.js"></script> -->
-
+    <section id="options"></section>
 </body>
 </html>

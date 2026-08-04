@@ -212,6 +212,21 @@ main {
 
 /* cuerpo*/
 
+.organ {
+    width: 100px;
+    height: 140px;
+    border-radius: 8px;
+    color: #7f8c8d;
+    left: 50%;
+    bottom: 50%;
+}
+
+.organSlot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 #brain-slot{
     grid-column: 1 / 2;
     grid-row: 1 / 2;

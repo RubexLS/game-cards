@@ -138,26 +138,37 @@ function useCard(cardIndex, cardImage) {
 }
 
 function renderBody(cardImage){
+    let organSlot;
+
+    const organDiv = document.createElement('div');
     switch (bodyZone[bodyZone.length - 1]) {
         case 'brain':
-            organBrain.style.backgroundImage = cardImage;
-            organBrain.style.backgroundSize = 'cover';
+            organDiv.className = 'organ brain-card';
+            organSlot = organBrain;
             break;
         case 'heart':
-            organHeart.style.backgroundImage = cardImage;
-            organHeart.style.backgroundSize = 'cover';
+            organDiv.className = 'organ heart-card';
+            organSlot = organHeart;
             break;
         case 'stomach':
-            organStomach.style.backgroundImage = cardImage;
-            organStomach.style.backgroundSize = 'cover';
+            organDiv.className = 'organ stomach-card';
+            organSlot = organStomach;
             break;
         case 'bone':
-            organBone.style.backgroundImage = cardImage;
-            organBone.style.backgroundSize = 'cover';
+            organDiv.className = 'organ bone-card';
+            organSlot = organBone;
             break;
-        case 'nervousSystem':
-            organNervous.style.backgroundImage = cardImage;
-            organNervous.style.backgroundSize = 'cover';
+        default:
+            organDiv.className = 'organ nervous-card';
+            organSlot = organNervous;
             break;
     }
+    organSlot.innerText = '';
+
+    organDiv.style.backgroundImage = cardImage;
+    organDiv.style.backgroundSize = 'cover';
+
+    organSlot.appendChild(organDiv);
+
+
 }

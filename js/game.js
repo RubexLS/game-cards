@@ -66,20 +66,13 @@ import { firebaseMock } from './firebaseMock.js';
 const GAME_ID = 'game_001';
 
 import {
-        estadoJuego,    
-        // status, 
-        // oponentHand, 
-        // playerHand, 
+        estadoJuego, 
         playerHandElement, 
-        // exileZone, 
         oponentHandElement, 
         renderBoard, 
         renderHand,
-        // bodyZone, // Asegúrate de exportar/importar bodyZone desde ui.js para centralizar el estado
-        syncDataBase // Añade esta función de retorno que creamos en ui.js
+        syncDataBase
 } from './ui.js';
-
-// let bodyZone = [];
 
 const options = document.getElementById('options');
 const organBrain = document.getElementById('brain-slot');
@@ -120,14 +113,14 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             options.appendChild(optionUse);
             options.appendChild(optionDiscard);
 
-            // const buttonDiscard = document.getElementsByClassName('discard')[0];
+            const buttonDiscard = document.getElementsByClassName('discard')[0];
 
             buttonDiscard.addEventListener('click', async () => {
                 await exileCard(index, `url('${card.cardPhoto}')`);
                 options.innerHTML = '';
             });
 
-            // const buttonUse = document.getElementsByClassName('use')[0];
+            const buttonUse = document.getElementsByClassName('use')[0];
 
             buttonUse.addEventListener('click', async () => {
                 await useCard(index, `url('${card.cardPhoto}')`);
@@ -153,24 +146,11 @@ async function exileCard(cardIndex, cardImage) {
         oponentHand: estadoJuego.oponentHand,
         exileZone: estadoJuego.exileZone
     });
-    // if(status){
-    //     const excludedCard = playerHand.splice(cardIndex, 1)[0];
-    //     exileZone.push(excludedCard.name);
-    // }else{
-    //     const excludedCard = oponentHand.splice(cardIndex, 1)[0];
-    //     exileZone.push(excludedCard.name);
-    // }
-    // renderHand();
-    // renderBoard(cardImage);
+
     await syncDataBase();
 }
 
 async function useCard(cardIndex, cardImage) {
-    // const organCard = playerHand.splice(cardIndex, 1)[0];
-    // bodyZone.push(organCard.name);
-
-    // renderHand()
-    // renderBody(cardImage);
     let manoActual = estadoJuego.status ? estadoJuego.playerHand : estadoJuego.oponentHand;
 
     if (manoActual.length === 0) return;
@@ -179,14 +159,13 @@ async function useCard(cardIndex, cardImage) {
     
     estadoJuego.bodyZone.push(organCard.name);
 
-    // Sincronizamos las manos modificadas y la zona del cuerpo del jugador activo
     await firebaseMock.updateGame(GAME_ID, {
-        playerHand: playerHand,
-        oponentHand: oponentHand,
-        bodyZone: bodyZone // Recuerda añadir "bodyZone: []" en el estado inicial de firebaseMock.js
+        playerHand: estadoJuego.playerHand,
+        oponentHand: estadoJuego.oponentHand,
+        bodyZone: estadoJuego.bodyZone
     });
 
-    await sincronizarConBaseDeDatos();
+    await syncDataBase();
     renderBody(cardImage);
 }
 
@@ -194,7 +173,7 @@ function renderBody(cardImage){
     let organSlot;
 
     const organDiv = document.createElement('div');
-    switch (bodyZone[bodyZone.length - 1]) {
+    switch (estadoJuego.bodyZone[estadoJuego.bodyZone.length - 1]) {
         case 'brain':
             organDiv.className = 'organ brain-card';
             organSlot = organBrain;

@@ -1,8 +1,6 @@
-// firebaseMock.js - Simula Firebase Firestore / Realtime Database usando localStorage
-
 const DB_KEY = 'firebase_mock_juego_cartas';
 
-// Estructura inicial idéntica al JSON que usarás en Firebase
+// Estructura inicial idéntica al JSON de Firebase
 const initialState = {
     game_001: {
         state: "en_progreso",
@@ -28,7 +26,7 @@ export const firebaseMock = {
     // Simula actualizar campos específicos en Firebase
     updateGame: async (gameId, newData) => {
         await new Promise(resolve => setTimeout(resolve, 100));
-        const db = JSON.parse(localStorage.getItem(DB_KEY)) || estadoInicial;
+        const db = JSON.parse(localStorage.getItem(DB_KEY)) || initialState;
         
         if (db[gameId]) {
             // Fusionamos los datos antiguos con los nuevos, tal como hace Firebase

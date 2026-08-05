@@ -5,8 +5,7 @@ class Cards {
     constructor(name, cardPhoto, amount, type, color) {
         this.name = name
         Cards.typeCards.push(this)
-        this.cardPhoto = new Image()
-        this.cardPhoto.src = cardPhoto
+        this.cardPhoto = cardPhoto
         this.amount = amount
         this.type = type
         this.color = color
@@ -15,9 +14,15 @@ class Cards {
     }
 
     static buildDeck(){
+        Cards.deck = [];
         Cards.typeCards.forEach(card => {
             for(let i = 0; i < card.amount; i++){
-                Cards.deck.push({ ...card });
+                Cards.deck.push({
+                    name: card.name,
+                    cardPhoto: card.cardPhoto,
+                    type: card.type,
+                    color: card.color
+                });
             }
         });
     }
@@ -30,35 +35,51 @@ class Cards {
     }
 }
 
-let bone = new Cards('bone', './assets/bone.png', 5, 'organ', 'yellow');
-let brain = new Cards('brain', './assets/brain.png', 5, 'organ', 'blue');
-let heart = new Cards('heart', './assets/heart.png', 5, 'organ', 'red');
-let stomach = new Cards('stomach', './assets/stomach.png', 5, 'organ', 'green');
-let nervousSystem = new Cards('nervousSystem', './assets/rainbow_organ.png', 1, 'organ', 'rainbow');
+let bone = new Cards('bone', '/assets/bone.png', 5, 'organ', 'yellow');
+let brain = new Cards('brain', '/assets/brain.png', 5, 'organ', 'blue');
+let heart = new Cards('heart', '/assets/heart.png', 5, 'organ', 'red');
+let stomach = new Cards('stomach', '/assets/stomach.png', 5, 'organ', 'green');
+let nervousSystem = new Cards('nervousSystem', '/assets/rainbow_organ.png', 1, 'organ', 'rainbow');
 
-let yellowMedicine = new Cards('yellow_medicine', './assets/yellow_medicine.png', 4, 'medicine', 'yellow');
-let blueMedicine = new Cards('blue_medicine', './assets/blue_medicine.png', 4, 'medicine', 'blue');
-let redMedicine = new Cards('red_medicine', './assets/red_medicine.png', 4, 'medicine', 'red');
-let greenMedicine = new Cards('green_medicine', './assets/green_medicine.png', 4, 'medicine', 'green');
-let rainbowMedicine = new Cards('rainbow_medicine', './assets/rainbow_medicine.png', 4, 'medicine', 'rainbow');
+let yellowMedicine = new Cards('yellow_medicine', '/assets/yellow_medicine.png', 4, 'medicine', 'yellow');
+let blueMedicine = new Cards('blue_medicine', '/assets/blue_medicine.png', 4, 'medicine', 'blue');
+let redMedicine = new Cards('red_medicine', '/assets/red_medicine.png', 4, 'medicine', 'red');
+let greenMedicine = new Cards('green_medicine', '/assets/green_medicine.png', 4, 'medicine', 'green');
+let rainbowMedicine = new Cards('rainbow_medicine', '/assets/rainbow_medicine.png', 4, 'medicine', 'rainbow');
 
-let yellowVirus = new Cards('yellow_virus', './assets/yellow_virus.png', 4, 'virus', 'yellow');
-let blueVirus = new Cards('blue_virus', './assets/blue_virus.png', 4, 'virus', 'blue');
-let redVirus = new Cards('red_virus', './assets/red_virus.png', 4, 'virus', 'red');
-let greenVirus = new Cards('green_virus', './assets/green_virus.png', 4, 'virus', 'green');
-let rainbowVirus = new Cards('rainbow_virus', './assets/rainbow_virus.png', 1, 'virus', 'rainbow');
+let yellowVirus = new Cards('yellow_virus', '/assets/yellow_virus.png', 4, 'virus', 'yellow');
+let blueVirus = new Cards('blue_virus', '/assets/blue_virus.png', 4, 'virus', 'blue');
+let redVirus = new Cards('red_virus', '/assets/red_virus.png', 4, 'virus', 'red');
+let greenVirus = new Cards('green_virus', '/assets/green_virus.png', 4, 'virus', 'green');
+let rainbowVirus = new Cards('rainbow_virus', '/assets/rainbow_virus.png', 1, 'virus', 'rainbow');
 
-let contagion = new Cards('contagion', './assets/contagion.png', 2, 'treatment', 'purple');
-let thief = new Cards('thief', './assets/thief.png', 3, 'treatment', 'purple');
-let transplant = new Cards('transplant', './assets/transplant.png', 3, 'treatment', 'purple');
-let glove = new Cards('glove', './assets/glove.png', 1, 'treatment', 'purple');
-let medicalError = new Cards('medical_error', './assets/medical_error.png', 1, 'treatment', 'purple');
+let contagion = new Cards('contagion', '/assets/contagion.png', 2, 'treatment', 'purple');
+let thief = new Cards('thief', '/assets/thief.png', 3, 'treatment', 'purple');
+let transplant = new Cards('transplant', '/assets/transplant.png', 3, 'treatment', 'purple');
+let glove = new Cards('glove', '/assets/glove.png', 1, 'treatment', 'purple');
+let medicalError = new Cards('medical_error', '/assets/medical_error.png', 1, 'treatment', 'purple');
 
 export { Cards };
 
-import { status, oponentHand, playerHand, playerHandElement, exileZone, oponentHandElement , renderBoard, renderHand} from './ui.js';
+import { firebaseMock } from './firebaseMock.js';
 
-let bodyZone = [];
+const GAME_ID = 'game_001';
+
+import {
+        estadoJuego,    
+        // status, 
+        // oponentHand, 
+        // playerHand, 
+        playerHandElement, 
+        // exileZone, 
+        oponentHandElement, 
+        renderBoard, 
+        renderHand,
+        // bodyZone, // Asegúrate de exportar/importar bodyZone desde ui.js para centralizar el estado
+        syncDataBase // Añade esta función de retorno que creamos en ui.js
+} from './ui.js';
+
+// let bodyZone = [];
 
 const options = document.getElementById('options');
 const organBrain = document.getElementById('brain-slot');
@@ -83,7 +104,7 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
                 break;
         }
         // cardDiv.innerText = card.name; // nombre de las cartas
-        cardDiv.style.backgroundImage = `url(${card.cardPhoto.src})`;
+        cardDiv.style.backgroundImage = `url('${card.cardPhoto}')`;
         cardDiv.style.backgroundSize = "cover";
         // Al hacer clic en una carta de la mano, se destierra
         cardDiv.addEventListener('click', () => {
@@ -99,17 +120,17 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             options.appendChild(optionUse);
             options.appendChild(optionDiscard);
 
-            const buttonDiscard = document.getElementsByClassName('discard')[0];
+            // const buttonDiscard = document.getElementsByClassName('discard')[0];
 
-            buttonDiscard.addEventListener('click', () => {
-                exileCard(index, `url(${card.cardPhoto.src})`);
+            buttonDiscard.addEventListener('click', async () => {
+                await exileCard(index, `url('${card.cardPhoto}')`);
                 options.innerHTML = '';
             });
 
-            const buttonUse = document.getElementsByClassName('use')[0];
+            // const buttonUse = document.getElementsByClassName('use')[0];
 
-            buttonUse.addEventListener('click', () => {
-                useCard(index, `url(${card.cardPhoto.src})`);
+            buttonUse.addEventListener('click', async () => {
+                await useCard(index, `url('${card.cardPhoto}')`);
                 options.innerHTML = '';
             });
         });
@@ -117,23 +138,55 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
     });
 }
 
-function exileCard(cardIndex, cardImage) {
-    if(status){
-        const excludedCard = playerHand.splice(cardIndex, 1)[0];
-        exileZone.push(excludedCard.name);
-    }else{
-        const excludedCard = oponentHand.splice(cardIndex, 1)[0];
-        exileZone.push(excludedCard.name);
-    }
-    renderHand();
-    renderBoard(cardImage);
+async function exileCard(cardIndex, cardImage) {
+    let manoActual = estadoJuego.status ? estadoJuego.playerHand : estadoJuego.oponentHand;
+
+    if (manoActual.length === 0) return;
+
+    const excludedCard = manoActual.splice(cardIndex, 1)[0];
+    
+
+    estadoJuego.exileZone.push(excludedCard.cardPhoto);
+
+    await firebaseMock.updateGame(GAME_ID, {
+        playerHand: estadoJuego.playerHand,
+        oponentHand: estadoJuego.oponentHand,
+        exileZone: estadoJuego.exileZone
+    });
+    // if(status){
+    //     const excludedCard = playerHand.splice(cardIndex, 1)[0];
+    //     exileZone.push(excludedCard.name);
+    // }else{
+    //     const excludedCard = oponentHand.splice(cardIndex, 1)[0];
+    //     exileZone.push(excludedCard.name);
+    // }
+    // renderHand();
+    // renderBoard(cardImage);
+    await syncDataBase();
 }
 
-function useCard(cardIndex, cardImage) {
-    const organCard = playerHand.splice(cardIndex, 1)[0];
-    bodyZone.push(organCard.name);
+async function useCard(cardIndex, cardImage) {
+    // const organCard = playerHand.splice(cardIndex, 1)[0];
+    // bodyZone.push(organCard.name);
 
-    renderHand()
+    // renderHand()
+    // renderBody(cardImage);
+    let manoActual = estadoJuego.status ? estadoJuego.playerHand : estadoJuego.oponentHand;
+
+    if (manoActual.length === 0) return;
+    
+    const organCard = manoActual.splice(cardIndex, 1)[0];
+    
+    estadoJuego.bodyZone.push(organCard.name);
+
+    // Sincronizamos las manos modificadas y la zona del cuerpo del jugador activo
+    await firebaseMock.updateGame(GAME_ID, {
+        playerHand: playerHand,
+        oponentHand: oponentHand,
+        bodyZone: bodyZone // Recuerda añadir "bodyZone: []" en el estado inicial de firebaseMock.js
+    });
+
+    await sincronizarConBaseDeDatos();
     renderBody(cardImage);
 }
 

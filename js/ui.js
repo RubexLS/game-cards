@@ -1,7 +1,11 @@
-import { Cards, renderHandPlayer } from './game.js';
-import { firebaseMock } from './firebaseMock.js'; // simulador
+import { Cards, renderHandPlayer, renderBody } from './game.js';
+import { firebaseMock, iniciarNuevoTurno } from './firebaseMock.js'; // Conectado a tu nuevo Firebase real
 
 const GAME_ID = 'game_001'; // ID de la sala de juego
+
+// DEFINIR ROL LOCAL: Cambiar a 'playerBlue' en la computadora del otro jugador
+const MI_ROL = 'playerOrange'; 
+const RIVAL_ROL = (MI_ROL === 'playerOrange') ? 'playerBlue' : 'playerOrange';
 
 // Los 'let' planos son cambiados por funciones que leen de la base de datos simulada
 // Centralizamos todo en un único objeto exportado para mantener la referencia viva
@@ -15,45 +19,40 @@ export let estadoJuego = {
 };
 
 // Shorthands para mantener compatibilidad con tus eventos visuales internos
-export function getStatus() { return estadoJuego.status; } //------------------------------
+export function getStatus() { 
+    // Es mi turno si el estado de la DB coincide con mi rol
+    if (MI_ROL === 'playerOrange') return estadoJuego.status === true;
+    if (MI_ROL === 'playerBlue') return estadoJuego.status === false;
+}
 
-export async function iniciarJuego() {
-    // 1. Forzar limpieza del localStorage viejo
-    localStorage.removeItem('firebase_mock_juego_cartas');
-    
-    Cards.buildDeck();
-    Cards.mingle();
-    
-    let newDeck = [...Cards.deck];
-    let newHandPlayer = [];
-    let newHandOponent = [];
+export async function iniciarJuego() {    
+    if (MI_ROL == 'playerOrange'){
+        Cards.buildDeck();
+        Cards.mingle();
+        
+        let newDeck = [...Cards.deck];
+        let newHandPlayer = [];
+        let newHandOponent = [];
 
-    for(let i=0; i<3; i++){    
-        newHandPlayer.push(newDeck.pop());
-        newHandOponent.push(newDeck.pop());
+        for(let i=0; i<3; i++){    
+            newHandPlayer.push(newDeck.pop());
+            newHandOponent.push(newDeck.pop());
+        }
+
+        // (Sincronización del estado) en el "firebase"
+        await firebaseMock.updateGame(GAME_ID, {
+            deck: newDeck,
+            playerOrange: newHandPlayer,
+            playerBlue: newHandOponent,
+            turn: true,
+            exileZone: [],
+            bodyZone: []
+        });
     }
-
-    // (Sincronización del estado) en el "firebase"
-    await firebaseMock.updateGame(GAME_ID, {
-        deck: newDeck,
-        playerOrange: newHandPlayer,
-        playerBlue: newHandOponent,
-        turn: true,
-        exileZone: [],
-        bodyZone: []
-    });
-
-    await syncDataBase();
-
-    renderHand('firstTurn')
-    
-    console.log("¡Partida inicializada en Firebase Local con éxito!");
 }
 
 // Trae los datos del JSON/Firebase y actualiza las variables locales
-export async function syncDataBase() {
-    const gameData = await firebaseMock.getGame(GAME_ID);
-    
+export async function syncDataBase(gameData) {
     if (gameData) {
         estadoJuego.deck = gameData.deck || [];
         estadoJuego.playerOrange = gameData.playerOrange || [];
@@ -61,9 +60,14 @@ export async function syncDataBase() {
         estadoJuego.status = gameData.turn;
         estadoJuego.exileZone = gameData.exileZone || [];
         estadoJuego.bodyZone = gameData.bodyZone || [];
+        
+        if (getStatus()) {
+            iniciarNuevoTurno();
+        }
 
         renderHand();
         renderBoard();
+        renderBody();
     }
 }
 
@@ -77,25 +81,26 @@ const buttonElement = document.getElementById('turn');
 
 // Función para actualizar la interfaz visual de la mano
 export function renderHand(keyword) {
-    // deckCountElement.innerText = deck.length;
-    if (keyword === 'firstTurn') {
-        handTemp.classList.remove('disabled');
-        oponentHandElement.classList.remove('disabled');
-        
-        renderHandPlayer(estadoJuego.playerOrange, handTemp);
-        renderHandPlayer(estadoJuego.playerBlue, oponentHandElement);
+    handTemp.innerHTML = '';
+    oponentHandElement.innerHTML = '';
 
-        oponentHandElement.classList.add('disabled');
-    }else if(estadoJuego.status){
+    const misCartas = estadoJuego[MI_ROL];
+    const cartasRival = estadoJuego[RIVAL_ROL];
+
+    renderHandPlayer(misCartas, handTemp);
+    renderHandPlayer(cartasRival, oponentHandElement);
+
+    const esMiTurno = getStatus();
+    if (esMiTurno) {
         handTemp.classList.remove('disabled');
-        renderHandPlayer(estadoJuego.playerOrange, handTemp);
-        renderHandPlayer(estadoJuego.playerBlue, oponentHandElement);
         oponentHandElement.classList.add('disabled');
-    }else if(!estadoJuego.status){
-        handTemp.classList.remove('disabled');
-        renderHandPlayer(estadoJuego.playerOrange, oponentHandElement);
-        renderHandPlayer(estadoJuego.playerBlue, handTemp);
-        oponentHandElement.classList.add('disabled');
+        buttonElement.disabled = false;
+        buttonElement.innerText = "Finalizar Turno";
+    } else {
+        handTemp.classList.add('disabled');
+        oponentHandElement.classList.remove('disabled');
+        buttonElement.disabled = true;
+        buttonElement.innerText = "Turno del Rival";
     }
 }
 
@@ -123,35 +128,32 @@ export function renderBoard(cardImage) {
 
 // Lógica para robar una carta conectada al simulador
 async function drawCard() {
-    let currentPLayer;
+    // Bloquear si no es mi turno
+    if (!getStatus()) {
+        alert("No es tu turno para robar.");
+        return;
+    }
 
     if (estadoJuego.deck.length === 0) {
         alert("¡No quedan cartas en el mazo!");
         return;
     }
 
-    if(estadoJuego.status){
-        currentPLayer = estadoJuego.playerOrange;
-    }else{
-        currentPLayer = estadoJuego.playerBlue;
-    }
-    
-    if (currentPLayer.length >= 3) {
-        alert("Tu mano ya está llena (máximo 3 cartas). ¡Debes desterrar una primero!");
+    const miMano = estadoJuego[MI_ROL];
+
+    if (miMano.length >= 3) {
+        alert("Tu mano ya está llena (máximo 3 cartas).");
         return;
     }
 
     // Modificacion de los datos temporalmente
     const nextCard = estadoJuego.deck.pop();
-    currentPLayer.push(nextCard);
+    miMano.push(nextCard);
 
     await firebaseMock.updateGame(GAME_ID, {
         deck: estadoJuego.deck,
-        playerOrange: estadoJuego.playerOrange,
-        playerBlue: estadoJuego.playerBlue
+        [MI_ROL]: miMano
     });
-
-    await syncDataBase();
 }
 
 // Evento para hacer clic en el mazo
@@ -159,13 +161,9 @@ deckElement.addEventListener('click', drawCard);
 
 // cambio de turno
 buttonElement.addEventListener('click', async () => {
+    if (!getStatus()) return; // Por seguridad
+
     await firebaseMock.updateGame(GAME_ID, {
-        turn: !estadoJuego.status
+        turn: !estadoJuego.status // Cambia el boolean en la nube
     });
-
-    let temp = handTemp.innerHTML;
-    handTemp.innerHTML = oponentHandElement.innerHTML;
-    oponentHandElement.innerHTML = temp;
-
-    await syncDataBase();
 });

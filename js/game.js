@@ -1,3 +1,26 @@
+export { Cards };
+
+import { firebaseMock, obtenerEstadoBotonTurno, registrarUsoCarta } from './firebaseMock.js';
+
+const GAME_ID = 'game_001';
+
+import {
+        estadoJuego, 
+        handTemp, 
+        oponentHandElement, 
+        renderBoard, 
+        renderHand,
+        syncDataBase,
+        getStatus
+} from './ui.js';
+
+const options = document.getElementById('options');
+const organBrain = document.getElementById('brain-slot');
+const organHeart = document.getElementById('heart-slot');
+const organStomach = document.getElementById('stomach-slot');
+const organBone = document.getElementById('bone-slot');
+const organNervous = document.getElementById('nervous-slot');
+
 class Cards {
     static typeCards = [];
     static deck = [];
@@ -59,52 +82,35 @@ let transplant = new Cards('transplant', '/assets/transplant.png', 3, 'treatment
 let glove = new Cards('glove', '/assets/glove.png', 1, 'treatment', 'purple');
 let medicalError = new Cards('medical_error', '/assets/medical_error.png', 1, 'treatment', 'purple');
 
-export { Cards };
 
-import { firebaseMock } from './firebaseMock.js';
-
-const GAME_ID = 'game_001';
-
-import {
-        estadoJuego, 
-        handTemp, 
-        oponentHandElement, 
-        renderBoard, 
-        renderHand,
-        syncDataBase
-} from './ui.js';
-
-const options = document.getElementById('options');
-const organBrain = document.getElementById('brain-slot');
-const organHeart = document.getElementById('heart-slot');
-const organStomach = document.getElementById('stomach-slot');
-const organBone = document.getElementById('bone-slot');
-const organNervous = document.getElementById('nervous-slot');
 
 export function renderHandPlayer(currentPLayer, contenedorHTML) {
     contenedorHTML.innerHTML = '';
+    //verifica si es el contenedor del jugador
+    const esMiMano = (contenedorHTML === handTemp);
+
     currentPLayer.forEach((card, index) => {
         const cardDiv = document.createElement('div');
-        switch (index) {
-            case 0:
-                cardDiv.className = 'card left-card';
-                break;
-            case 1:
-                cardDiv.className = 'card medium-card';
-                break;
-            case 2:
-                cardDiv.className = 'card right-card';
-                break;
-        }
+
+        if (index === 0) cardDiv.className = 'card left-card';
+        else if (index === 1) cardDiv.className = 'card medium-card';
+        else if (index === 2) cardDiv.className = 'card right-card';
+
         // cardDiv.innerText = card.name; // nombre de las cartas
         cardDiv.style.backgroundImage = `url('${card.cardPhoto}')`;
         cardDiv.style.backgroundSize = "cover";
         // Al hacer clic en una carta de la mano, se destierra
         cardDiv.addEventListener('click', () => {
             options.innerHTML = '';
+
             const optionUse = document.createElement('button');
             optionUse.className = 'option use';
             optionUse.innerText = 'Usar';
+
+            if (obtenerEstadoBotonTurno()) {
+                optionUse.disabled = true;
+                optionUse.innerText = '1 por turno';
+            }
             
             const optionDiscard = document.createElement('button');
             optionDiscard.className = 'option discard';
@@ -113,96 +119,100 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             options.appendChild(optionUse);
             options.appendChild(optionDiscard);
 
-            const buttonDiscard = document.getElementsByClassName('discard')[0];
-
-            buttonDiscard.addEventListener('click', async () => {
-                await exileCard(index, `url('${card.cardPhoto}')`);
+            optionDiscard.addEventListener('click', async () => {
                 options.innerHTML = '';
+                await exileCard(index);
             });
 
-            const buttonUse = document.getElementsByClassName('use')[0];
+            optionUse.addEventListener('click', async () => {
+                // en caso de multiples clicks
+                if (obtenerEstadoBotonTurno()) return; 
 
-            buttonUse.addEventListener('click', async () => {
-                await useCard(index, `url('${card.cardPhoto}')`);
+                // Bloquea el estado local del botón de forma inmediata
+                registrarUsoCarta();
+                optionUse.disabled = true;
                 options.innerHTML = '';
+
+                await useCard(index);
             });
         });
         contenedorHTML.appendChild(cardDiv);  
     });
 }
 
-async function exileCard(cardIndex, cardImage) {
-    let manoActual = estadoJuego.status ? estadoJuego.playerOrange : estadoJuego.playerBlue;
+async function exileCard(cardIndex) {
+    // Detectamos dinámicamente cuál es mi propiedad en la base de datos según el estado del turno
+    const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
+    let miMano = estadoJuego[miClaveRol];
 
-    if (manoActual.length === 0) return;
+    if (miMano.length === 0) return;
 
-    const excludedCard = manoActual.splice(cardIndex, 1)[0];
-    
+    // Quita la carta del array local
+    const excludedCard = miMano.splice(cardIndex, 1)[0];
 
-    estadoJuego.exileZone.push(excludedCard.cardPhoto);
+    // Guardamos la URL limpia de la foto directamente en el historial de descarte
+    const urlFormateada = `url('${excludedCard.cardPhoto}')`;
+    estadoJuego.exileZone.push(urlFormateada);
 
     await firebaseMock.updateGame(GAME_ID, {
-        playerOrange: estadoJuego.playerOrange,
-        playerBlue: estadoJuego.playerBlue,
+        [miClaveRol]: miMano,
         exileZone: estadoJuego.exileZone
     });
-
-    await syncDataBase();
 }
 
 async function useCard(cardIndex, cardImage) {
-    let manoActual = estadoJuego.status ? estadoJuego.playerOrange : estadoJuego.playerBlue;
+    const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
+    let miMano = estadoJuego[miClaveRol];
 
-    if (manoActual.length === 0) return;
+    if (miMano.length === 0) return;
     
-    const organCard = manoActual.splice(cardIndex, 1)[0];
-    
-    estadoJuego.bodyZone.push(organCard.name);
+    const organCard = miMano.splice(cardIndex, 1)[0];
 
-    await firebaseMock.updateGame(GAME_ID, {
-        playerOrange: estadoJuego.playerOrange,
-        playerBlue: estadoJuego.playerBlue,
-        bodyZone: estadoJuego.bodyZone
+    estadoJuego.bodyZone.push({
+        name: organCard.name,
+        photo: `url('${organCard.cardPhoto}')`
     });
 
-    
-
-    await syncDataBase();
-    renderBody(cardImage);
+    await firebaseMock.updateGame(GAME_ID, {
+        [miClaveRol]: miMano,
+        bodyZone: estadoJuego.bodyZone
+    });
 }
 
-function renderBody(cardImage){
-    let organSlot;
+export function renderBody(cardImage){
+    // 1. Limpiar todos los slots antes de redibujar para evitar duplicados visuales
+    [organBrain, organHeart, organStomach, organBone, organNervous].forEach(slot => slot.innerHTML = 'Vacío');
 
-    const organDiv = document.createElement('div');
-    switch (estadoJuego.bodyZone[estadoJuego.bodyZone.length - 1]) {
-        case 'brain':
-            organDiv.className = 'organ brain-card';
-            organSlot = organBrain;
-            break;
-        case 'heart':
-            organDiv.className = 'organ heart-card';
-            organSlot = organHeart;
-            break;
-        case 'stomach':
-            organDiv.className = 'organ stomach-card';
-            organSlot = organStomach;
-            break;
-        case 'bone':
-            organDiv.className = 'organ bone-card';
-            organSlot = organBone;
-            break;
-        default:
-            organDiv.className = 'organ nervous-card';
-            organSlot = organNervous;
-            break;
-    }
-    organSlot.innerText = '';
+    estadoJuego.bodyZone.forEach(card => {
+        let organSlot;
+        const organDiv = document.createElement('div');
 
-    organDiv.style.backgroundImage = cardImage;
-    organDiv.style.backgroundSize = 'cover';
+        switch (card.name) {
+            case 'brain':
+                organDiv.className = 'organ brain-card';
+                organSlot = organBrain;
+                break;
+            case 'heart':
+                organDiv.className = 'organ heart-card';
+                organSlot = organHeart;
+                break;
+            case 'stomach':
+                organDiv.className = 'organ stomach-card';
+                organSlot = organStomach;
+                break;
+            case 'bone':
+                organDiv.className = 'organ bone-card';
+                organSlot = organBone;
+                break;
+            default:
+                organDiv.className = 'organ nervous-card';
+                organSlot = organNervous;
+                break;
+        }
 
-    organSlot.appendChild(organDiv);
-
-
+        organSlot.innerText = '';
+        organDiv.style.backgroundImage = card.photo;
+        organDiv.style.backgroundSize = 'cover';
+        organSlot.appendChild(organDiv);
+    });
 }

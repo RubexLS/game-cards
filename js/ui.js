@@ -6,8 +6,8 @@ const GAME_ID = 'game_001'; // ID de la sala de juego
 // Los 'let' planos son cambiados por funciones que leen de la base de datos simulada
 // Centralizamos todo en un único objeto exportado para mantener la referencia viva
 export let estadoJuego = {
-    playerHand: [],
-    oponentHand: [],
+    playerOrange: [],
+    playerBlue: [],
     exileZone: [],
     bodyZone: [],
     deck: [],
@@ -36,8 +36,8 @@ export async function iniciarJuego() {
     // (Sincronización del estado) en el "firebase"
     await firebaseMock.updateGame(GAME_ID, {
         deck: newDeck,
-        playerHand: newHandPlayer,
-        oponentHand: newHandOponent,
+        playerOrange: newHandPlayer,
+        playerBlue: newHandOponent,
         turn: true,
         exileZone: [],
         bodyZone: []
@@ -56,8 +56,8 @@ export async function syncDataBase() {
     
     if (gameData) {
         estadoJuego.deck = gameData.deck || [];
-        estadoJuego.playerHand = gameData.playerHand || [];
-        estadoJuego.oponentHand = gameData.oponentHand || [];
+        estadoJuego.playerOrange = gameData.playerOrange || [];
+        estadoJuego.playerBlue = gameData.playerBlue || [];
         estadoJuego.status = gameData.turn;
         estadoJuego.exileZone = gameData.exileZone || [];
         estadoJuego.bodyZone = gameData.bodyZone || [];
@@ -70,8 +70,8 @@ export async function syncDataBase() {
 // Elementos del DOM
 const deckElement = document.getElementById('deck');
 const deckCountElement = document.getElementById('deck-count');
-export const playerHandElement = document.getElementById('player-hand');
-export const oponentHandElement = document.getElementById('oponent-hand');
+export let handTemp = document.getElementById('player-hand');
+export let oponentHandElement = document.getElementById('oponent-hand');
 const exileSlot = document.getElementById('exile-slot');
 const buttonElement = document.getElementById('turn');
 
@@ -79,21 +79,23 @@ const buttonElement = document.getElementById('turn');
 export function renderHand(keyword) {
     // deckCountElement.innerText = deck.length;
     if (keyword === 'firstTurn') {
-        playerHandElement.classList.remove('disabled');
+        handTemp.classList.remove('disabled');
         oponentHandElement.classList.remove('disabled');
         
-        renderHandPlayer(estadoJuego.playerHand, playerHandElement);
-        renderHandPlayer(estadoJuego.oponentHand, oponentHandElement);
+        renderHandPlayer(estadoJuego.playerOrange, handTemp);
+        renderHandPlayer(estadoJuego.playerBlue, oponentHandElement);
 
         oponentHandElement.classList.add('disabled');
     }else if(estadoJuego.status){
-        playerHandElement.classList.remove('disabled');
-        renderHandPlayer(estadoJuego.playerHand, playerHandElement);
+        handTemp.classList.remove('disabled');
+        renderHandPlayer(estadoJuego.playerOrange, handTemp);
+        renderHandPlayer(estadoJuego.playerBlue, oponentHandElement);
         oponentHandElement.classList.add('disabled');
     }else if(!estadoJuego.status){
-        oponentHandElement.classList.remove('disabled');
-        renderHandPlayer(estadoJuego.oponentHand, oponentHandElement);
-        playerHandElement.classList.add('disabled');
+        handTemp.classList.remove('disabled');
+        renderHandPlayer(estadoJuego.playerOrange, oponentHandElement);
+        renderHandPlayer(estadoJuego.playerBlue, handTemp);
+        oponentHandElement.classList.add('disabled');
     }
 }
 
@@ -129,9 +131,9 @@ async function drawCard() {
     }
 
     if(estadoJuego.status){
-        currentPLayer = estadoJuego.playerHand;
+        currentPLayer = estadoJuego.playerOrange;
     }else{
-        currentPLayer = estadoJuego.oponentHand;
+        currentPLayer = estadoJuego.playerBlue;
     }
     
     if (currentPLayer.length >= 3) {
@@ -145,8 +147,8 @@ async function drawCard() {
 
     await firebaseMock.updateGame(GAME_ID, {
         deck: estadoJuego.deck,
-        playerHand: estadoJuego.playerHand,
-        oponentHand: estadoJuego.oponentHand
+        playerOrange: estadoJuego.playerOrange,
+        playerBlue: estadoJuego.playerBlue
     });
 
     await syncDataBase();
@@ -160,6 +162,10 @@ buttonElement.addEventListener('click', async () => {
     await firebaseMock.updateGame(GAME_ID, {
         turn: !estadoJuego.status
     });
+
+    let temp = handTemp.innerHTML;
+    handTemp.innerHTML = oponentHandElement.innerHTML;
+    oponentHandElement.innerHTML = temp;
 
     await syncDataBase();
 });

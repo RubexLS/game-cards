@@ -67,7 +67,7 @@ const GAME_ID = 'game_001';
 
 import {
         estadoJuego, 
-        playerHandElement, 
+        handTemp, 
         oponentHandElement, 
         renderBoard, 
         renderHand,
@@ -132,7 +132,7 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
 }
 
 async function exileCard(cardIndex, cardImage) {
-    let manoActual = estadoJuego.status ? estadoJuego.playerHand : estadoJuego.oponentHand;
+    let manoActual = estadoJuego.status ? estadoJuego.playerOrange : estadoJuego.playerBlue;
 
     if (manoActual.length === 0) return;
 
@@ -142,8 +142,8 @@ async function exileCard(cardIndex, cardImage) {
     estadoJuego.exileZone.push(excludedCard.cardPhoto);
 
     await firebaseMock.updateGame(GAME_ID, {
-        playerHand: estadoJuego.playerHand,
-        oponentHand: estadoJuego.oponentHand,
+        playerOrange: estadoJuego.playerOrange,
+        playerBlue: estadoJuego.playerBlue,
         exileZone: estadoJuego.exileZone
     });
 
@@ -151,7 +151,7 @@ async function exileCard(cardIndex, cardImage) {
 }
 
 async function useCard(cardIndex, cardImage) {
-    let manoActual = estadoJuego.status ? estadoJuego.playerHand : estadoJuego.oponentHand;
+    let manoActual = estadoJuego.status ? estadoJuego.playerOrange : estadoJuego.playerBlue;
 
     if (manoActual.length === 0) return;
     
@@ -160,10 +160,12 @@ async function useCard(cardIndex, cardImage) {
     estadoJuego.bodyZone.push(organCard.name);
 
     await firebaseMock.updateGame(GAME_ID, {
-        playerHand: estadoJuego.playerHand,
-        oponentHand: estadoJuego.oponentHand,
+        playerOrange: estadoJuego.playerOrange,
+        playerBlue: estadoJuego.playerBlue,
         bodyZone: estadoJuego.bodyZone
     });
+
+    
 
     await syncDataBase();
     renderBody(cardImage);

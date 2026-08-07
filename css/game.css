@@ -31,13 +31,22 @@ main {
     align-items: center;
 }
 
-.bodyGame{
+.bodyGame, .playerBlue, .playerRed, .playerYellow, .playerGreen{
     display: grid;
     grid-template-columns: repeat(2, 0.5fr);
     grid-template-rows: repeat(3, 1fr);
     gap: 5px;
     width: 100%;
     height: 100%;
+}
+
+.bodyPlayers{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 5px;
+    width: 100%;
+    height: 600px;
 }
 
 .game-container {
@@ -227,28 +236,28 @@ main {
     align-items: center;
 }
 
-#brain-slot{
+#brain-slot, #brain-slot-blue, #brain-slot-red, #brain-slot-yellow, #brain-slot-green{
     grid-column: 1 / 2;
     grid-row: 1 / 2;
     background-color: #e74c3c;
 }
 
-#heart-slot{
+#heart-slot, #heart-slot-blue, #heart-slot-red, #heart-slot-yellow, #heart-slot-green{
     grid-column: 2 / 3;
     grid-row: 1 / 2;
     background-color: #e74c3c;
 }
-#stomach-slot{
+#stomach-slot, #stomach-slot-blue, #stomach-slot-red, #stomach-slot-yellow, #stomach-slot-green{
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     background-color: #e74c3c;
 }
-#bone-slot{
+#bone-slot, #bone-slot-blue, #bone-slot-red, #bone-slot-yellow, #bone-slot-green{
     grid-column: 2 / 3;
     grid-row: 2 / 3;
     background-color: #e74c3c;
 }
-#nervous-slot{
+#nervous-slot, #nervous-slot-blue, #nervous-slot-red, #nervous-slot-yellow, #nervous-slot-green{
     grid-column: 1 / 2;
     grid-row: 3 / 4;
     background-color: #e74c3c; /* Color rojo para el sistema nervioso */
@@ -276,4 +285,38 @@ main {
 .discard {
     bottom: 5%;
     left: 52%;
+}
+
+/*-------------------contenedores de los cuerpos de cada jugador--------------------------*/
+
+.playerBlue{
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    background-color: #1e0ece;
+    width: 100%;
+    height: 100%;
+}
+
+.playerRed{
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    background-color: #e74c3c;
+    width: 100%;
+    height: 100%;
+}
+
+.playerYellow{
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    background-color: #cee80c;
+    width: 100%;
+    height: 100%;
+}
+
+.playerGreen{
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    background-color: #07ea0b;
+    width: 100%;
+    height: 100%;
 }

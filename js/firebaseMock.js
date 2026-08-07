@@ -6,8 +6,8 @@ const initialState = {
         state: "en_progreso",
         turn: true, // true = jugador, false = oponente
         deck: [],
-        playerHand: [],
-        oponentHand: [],
+        playerOrange: [],
+        playerBlue: [],
         exileZone: [],
         discardZone: [],
         bodyZone: []

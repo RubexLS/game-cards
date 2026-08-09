@@ -13,21 +13,58 @@
 }
 
 .title {
+    display: flex;
     font-size: 130px;
     color: white;
-    margin: 65px 0;
+    margin: 20px 0;
     align-items: center;
+    justify-content: center;
+}
+
+.selectPlayer{
+    display: flex;
+    flex-direction: row;
+    height: 200px;
+    width: 50%;
+}
+
+.orange{
+    background-image: url("../assets/players/orange_player.png");
+    background-size: cover;
+}
+
+.blue{
+    background-image: url("../assets/players/blue_player.png");
+    background-size: cover;
+}
+
+.red{
+    background-image: url("../assets/players/red_player.png");
+    background-size: cover;
+}
+
+.yellow{
+    background-image: url("../assets/players/yellow_player.png");
+    background-size: cover;
+}
+
+.green{
+    background-image: url("../assets/players/green_player.png");
+    background-size: cover;
 }
 
 .menu button {
     font-family: "Pixelify Sans", sans-serif;
     margin: 10px;
     font-size: 50px;
-    background-color: black;
-    color: white;
+    background-color: rgba(255, 255, 255, 0);
+    color: #ffffff;
+    border-color: #ffffff;
+    border-radius: 10px;
+    width: 300px;
     
 }
 
 .menu button:hover {
-    color: yellow;
+    color: rgb(9, 239, 101);
 }

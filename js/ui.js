@@ -46,10 +46,8 @@ export let estadoJuego = {
 
 // Shorthands para mantener compatibilidad con tus eventos visuales internos
 export function getStatus() { 
-    if (MI_MANO_CLAVE === 'playerOrange') return estadoJuego.status === true;
-    if (MI_MANO_CLAVE === 'playerBlue') return estadoJuego.status === false;
-
-    return estadoJuego.status === true; 
+    // Es tu turno si la clave de tu mano local coincide exactamente con el turno activo en Firebase
+    return estadoJuego.status === MI_MANO_CLAVE;
 }
 
 export async function iniciarJuego() {    
@@ -60,22 +58,29 @@ export async function iniciarJuego() {
         let newDeck = [...Cards.deck];
         let handOrange = [];
         let handBlue = [];
+        let handRed = [];
+        let handYellow = [];
+        let handGreen = [];
 
         for(let i=0; i<3; i++){    
             handOrange.push(newDeck.pop());
             handBlue.push(newDeck.pop());
+            handRed.push(newDeck.pop());
+            handYellow.push(newDeck.pop());
+            handGreen.push(newDeck.pop());
         }
 
         // (Sincronización del estado) en el "firebase"
         await firebaseMock.updateGame(GAME_ID, {
+            state: "en_progreso", // <-- ¡PASO CLAVE! Esto avisa a todo Firebase que el juego inició
             deck: newDeck,
-            turn: true,
+            turn: "playerOrange",
             exileZone: [],
             playerOrange: handOrange,
             playerBlue: handBlue,
-            playerRed: [],
-            playerYellow: [],
-            playerGreen: [],
+            playerRed: handRed,
+            playerYellow: handYellow,
+            playerGreen: handGreen,
             bodyOrange: [],
             bodyBlue: [],
             bodyRed: [],
@@ -206,7 +211,18 @@ deckElement.addEventListener('click', drawCard);
 buttonElement.addEventListener('click', async () => {
     if (!getStatus()) return; // Por seguridad
 
+    // Definimos el orden oficial de los turnos en el juego
+    const ORDEN_TURNOS = ['playerOrange', 'playerBlue', 'playerRed', 'playerYellow', 'playerGreen'];
+    
+    // Buscamos el índice del jugador actual
+    const indiceActual = ORDEN_TURNOS.indexOf(MI_MANO_CLAVE);
+    
+    // Calculamos el siguiente índice (vuelve a 0 cuando llega al final del array)
+    const siguienteIndice = (indiceActual + 1) % ORDEN_TURNOS.length;
+    const siguienteJugador = ORDEN_TURNOS[siguienteIndice];
+
+    // Actualizamos el string del turno en la nube
     await firebaseMock.updateGame(GAME_ID, {
-        turn: !estadoJuego.status // Cambia el boolean en la nube
+        turn: siguienteJugador 
     });
 });

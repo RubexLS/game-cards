@@ -23,7 +23,7 @@ main {
     align-items: center;
 }
 
-.bodyGame, .playerBlue, .playerRed, .playerYellow, .playerGreen{
+.bodyGame, .rivalOne, .rivalTwo, .rivalThree, .rivalFour{
     display: grid;
     grid-template-columns: repeat(2, 0.5fr);
     grid-template-rows: repeat(3, 1fr);
@@ -228,28 +228,28 @@ main {
     align-items: center;
 }
 
-#brain-slot, #brain-slot-blue, #brain-slot-red, #brain-slot-yellow, #brain-slot-green{
+#brain-slot, #brain-slot-rivalOne, #brain-slot-rivalTwo, #brain-slot-rivalThree, #brain-slot-rivalFour{
     grid-column: 1 / 2;
     grid-row: 1 / 2;
     background-color: #e74c3c;
 }
 
-#heart-slot, #heart-slot-blue, #heart-slot-red, #heart-slot-yellow, #heart-slot-green{
+#heart-slot, #heart-slot-rivalOne, #heart-slot-rivalTwo, #heart-slot-rivalThree, #heart-slot-rivalFour{
     grid-column: 2 / 3;
     grid-row: 1 / 2;
     background-color: #e74c3c;
 }
-#stomach-slot, #stomach-slot-blue, #stomach-slot-red, #stomach-slot-yellow, #stomach-slot-green{
+#stomach-slot, #stomach-slot-rivalOne, #stomach-slot-rivalTwo, #stomach-slot-rivalThree, #stomach-slot-rivalFour{
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     background-color: #e74c3c;
 }
-#bone-slot, #bone-slot-blue, #bone-slot-red, #bone-slot-yellow, #bone-slot-green{
+#bone-slot, #bone-slot-rivalOne, #bone-slot-rivalTwo, #bone-slot-rivalThree, #bone-slot-rivalFour{
     grid-column: 2 / 3;
     grid-row: 2 / 3;
     background-color: #e74c3c;
 }
-#nervous-slot, #nervous-slot-blue, #nervous-slot-red, #nervous-slot-yellow, #nervous-slot-green{
+#nervous-slot, #nervous-slot-rivalOne, #nervous-slot-rivalTwo, #nervous-slot-rivalThree, #nervous-slot-rivalFour{
     grid-column: 1 / 2;
     grid-row: 3 / 4;
     background-color: #e74c3c; /* Color rojo para el sistema nervioso */
@@ -281,7 +281,7 @@ main {
 
 /*-------------------contenedores de los cuerpos de cada jugador--------------------------*/
 
-.playerBlue{
+.rivalOne{
     grid-column: 1 / 2;
     grid-row: 1 / 2;
     background-color: #1e0ece;
@@ -289,7 +289,7 @@ main {
     height: 100%;
 }
 
-.playerRed{
+.rivalTwo{
     grid-column: 2 / 3;
     grid-row: 1 / 2;
     background-color: #e74c3c;
@@ -297,7 +297,7 @@ main {
     height: 100%;
 }
 
-.playerYellow{
+.rivalThree{
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     background-color: #cee80c;
@@ -305,7 +305,7 @@ main {
     height: 100%;
 }
 
-.playerGreen{
+.rivalFour{
     grid-column: 2 / 3;
     grid-row: 2 / 3;
     background-color: #07ea0b;

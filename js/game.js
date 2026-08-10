@@ -7,19 +7,55 @@ const GAME_ID = 'game_001';
 import {
         estadoJuego, 
         handTemp, 
-        oponentHandElement, 
+        // oponentHandElement, 
         renderBoard, 
         renderHand,
+        getStatus,
         syncDataBase,
-        getStatus
+        MI_MANO_CLAVE,
+        MI_CUERPO_CLAVE
 } from './ui.js';
 
 const options = document.getElementById('options');
+
 const organBrain = document.getElementById('brain-slot');
 const organHeart = document.getElementById('heart-slot');
 const organStomach = document.getElementById('stomach-slot');
 const organBone = document.getElementById('bone-slot');
 const organNervous = document.getElementById('nervous-slot');
+
+const slotsRivalesDOM = [
+    {
+        brain: document.getElementById('brain-slot-rivalOne'),
+        heart: document.getElementById('heart-slot-rivalOne'),
+        stomach: document.getElementById('stomach-slot-rivalOne'),
+        bone: document.getElementById('bone-slot-rivalOne'),
+        nervous: document.getElementById('nervous-slot-rivalOne')
+    },
+    {
+        brain: document.getElementById('brain-slot-rivalTwo'),
+        heart: document.getElementById('heart-slot-rivalTwo'),
+        stomach: document.getElementById('stomach-slot-rivalTwo'),
+        bone: document.getElementById('bone-slot-rivalTwo'),
+        nervous: document.getElementById('nervous-slot-rivalTwo')
+    },
+    {
+        brain: document.getElementById('brain-slot-rivalThree'),
+        heart: document.getElementById('heart-slot-rivalThree'),
+        stomach: document.getElementById('stomach-slot-rivalThree'),
+        bone: document.getElementById('bone-slot-rivalThree'),
+        nervous: document.getElementById('nervous-slot-rivalThree')
+    },
+    {
+        brain: document.getElementById('brain-slot-rivalFour'),
+        heart: document.getElementById('heart-slot-rivalFour'),
+        stomach: document.getElementById('stomach-slot-rivalFour'),
+        bone: document.getElementById('bone-slot-rivalFour'),
+        nervous: document.getElementById('nervous-slot-rivalFour')
+    }
+];
+
+const TODOS_LOS_CUERPOS = ['bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen'];
 
 class Cards {
     static typeCards = [];
@@ -142,8 +178,9 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
 
 async function exileCard(cardIndex) {
     // Detectamos dinámicamente cuál es mi propiedad en la base de datos según el estado del turno
-    const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
-    let miMano = estadoJuego[miClaveRol];
+    // const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
+    let miManoClave = MI_MANO_CLAVE;
+    let miMano = estadoJuego[miManoClave];
 
     if (miMano.length === 0) return;
 
@@ -151,68 +188,148 @@ async function exileCard(cardIndex) {
     const excludedCard = miMano.splice(cardIndex, 1)[0];
 
     // Guardamos la URL limpia de la foto directamente en el historial de descarte
-    const urlFormateada = `url('${excludedCard.cardPhoto}')`;
-    estadoJuego.exileZone.push(urlFormateada);
+    // const urlFormateada = `url('${excludedCard.cardPhoto}')`;
+    estadoJuego.exileZone.push(excludedCard.cardPhoto);
 
     await firebaseMock.updateGame(GAME_ID, {
-        [miClaveRol]: miMano,
+        [miManoClave]: miMano,
         exileZone: estadoJuego.exileZone
     });
 }
 
-async function useCard(cardIndex, cardImage) {
-    const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
-    let miMano = estadoJuego[miClaveRol];
+async function useCard(cardIndex) {
+    // const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
+    let miMano = estadoJuego[MI_MANO_CLAVE];
 
-    if (miMano.length === 0) return;
+    if (!miMano || miMano.length === 0) return;
     
     const organCard = miMano.splice(cardIndex, 1)[0];
 
-    estadoJuego.bodyZone.push({
+    estadoJuego[MI_CUERPO_CLAVE].push({
         name: organCard.name,
         photo: `url('${organCard.cardPhoto}')`
     });
 
     await firebaseMock.updateGame(GAME_ID, {
-        [miClaveRol]: miMano,
-        bodyZone: estadoJuego.bodyZone
+        [MI_MANO_CLAVE]: miMano,
+        [MI_CUERPO_CLAVE]: estadoJuego[MI_CUERPO_CLAVE]
     });
 }
 
-export function renderBody(cardImage){
-    // 1. Limpiar todos los slots antes de redibujar para evitar duplicados visuales
-    [organBrain, organHeart, organStomach, organBone, organNervous].forEach(slot => slot.innerHTML = 'Vacío');
+// export function renderBody(cardImage){
+//     // 1. Limpiar todos los slots antes de redibujar para evitar duplicados visuales
+//     [organBrain, organHeart, organStomach, organBone, organNervous].forEach(slot => slot.innerHTML = 'Vacío');
 
-    estadoJuego.bodyZone.forEach(card => {
+//     const miCuerpoActual = estadoJuego[MI_CUERPO_CLAVE] || [];
+
+//     miCuerpoActual.forEach(card => {
+//         let organSlot;
+//         const organDiv = document.createElement('div');
+
+//         switch (card.name) {
+//             case 'brain':
+//                 organDiv.className = 'organ brain-card';
+//                 organSlot = organBrain;
+//                 break;
+//             case 'heart':
+//                 organDiv.className = 'organ heart-card';
+//                 organSlot = organHeart;
+//                 break;
+//             case 'stomach':
+//                 organDiv.className = 'organ stomach-card';
+//                 organSlot = organStomach;
+//                 break;
+//             case 'bone':
+//                 organDiv.className = 'organ bone-card';
+//                 organSlot = organBone;
+//                 break;
+//             default:
+//                 organDiv.className = 'organ nervous-card';
+//                 organSlot = organNervous;
+//                 break;
+//         }
+
+//         organSlot.innerText = '';
+//         organDiv.style.backgroundImage = card.photo;
+//         organDiv.style.backgroundSize = 'cover';
+//         organDiv.style.width = '100%';
+//         organDiv.style.height = '100%';
+//         organSlot.appendChild(organDiv);
+//     });
+// }
+
+// FUNCIÓN UNIVERSAL DE RENDERIZADO
+export function renderCuerpoEspecifico(claveCuerpo, slotsHTML) {
+    if (!slotsHTML) return;
+
+    [slotsHTML.brain, slotsHTML.heart, slotsHTML.stomach, slotsHTML.bone, slotsHTML.nervous].forEach(slot => {
+        if (slot) slot.innerHTML = ''; 
+    });
+
+    const cartasCuerpo = estadoJuego[claveCuerpo] || [];
+
+    cartasCuerpo.forEach(card => {
         let organSlot;
         const organDiv = document.createElement('div');
 
         switch (card.name) {
-            case 'brain':
-                organDiv.className = 'organ brain-card';
-                organSlot = organBrain;
-                break;
-            case 'heart':
-                organDiv.className = 'organ heart-card';
-                organSlot = organHeart;
-                break;
-            case 'stomach':
-                organDiv.className = 'organ stomach-card';
-                organSlot = organStomach;
-                break;
-            case 'bone':
-                organDiv.className = 'organ bone-card';
-                organSlot = organBone;
-                break;
-            default:
-                organDiv.className = 'organ nervous-card';
-                organSlot = organNervous;
-                break;
+            case 'brain': organDiv.className = 'organ brain-card'; organSlot = slotsHTML.brain; break;
+            case 'heart': organDiv.className = 'organ heart-card'; organSlot = slotsHTML.heart; break;
+            case 'stomach': organDiv.className = 'organ stomach-card'; organSlot = slotsHTML.stomach; break;
+            case 'bone': organDiv.className = 'organ bone-card'; organSlot = slotsHTML.bone; break;
+            default: organDiv.className = 'organ nervous-card'; organSlot = slotsHTML.nervous; break;
         }
 
-        organSlot.innerText = '';
-        organDiv.style.backgroundImage = card.photo;
-        organDiv.style.backgroundSize = 'cover';
-        organSlot.appendChild(organDiv);
+        if (organSlot) {
+            organDiv.style.backgroundImage = card.photo;
+            organDiv.style.backgroundSize = 'cover';
+            organDiv.style.width = '100%';
+            organDiv.style.height = '100%';
+            
+            // Atributos de metadatos listos para cuando lances virus
+            organDiv.dataset.propietario = claveCuerpo; 
+            organDiv.dataset.organo = card.name;
+
+            organSlot.appendChild(organDiv);
+        }
+    });
+
+    [slotsHTML.brain, slotsHTML.heart, slotsHTML.stomach, slotsHTML.bone, slotsHTML.nervous].forEach(slot => {
+        if (slot && slot.children.length === 0) {
+            slot.innerText = 'Vacío';
+        }
+    });
+}
+
+// FUNCIÓN PRINCIPAL DE INYECCIÓN VISUAL
+export function renderBody() {
+    // A. DIBUJAR MI PROPIO CUERPO EN LA IZQUIERDA
+    const misSlotsLocales = {
+        brain: organBrain,
+        heart: organHeart,
+        stomach: organStomach,
+        bone: organBone,
+        nervous: organNervous
+    };
+    renderCuerpoEspecifico(MI_CUERPO_CLAVE, misSlotsLocales);
+
+    // B. ROTAR Y DIBUJAR A LOS RIVALES EN LA DERECHA
+    if (!MI_CUERPO_CLAVE) return;
+
+    // Buscamos en qué posición del array global estoy parado
+    const miIndice = TODOS_LOS_CUERPOS.indexOf(MI_CUERPO_CLAVE);
+
+    // Cortamos y reordenamos el array para que los que están "después" pasen al frente
+    const listaRivalesRotada = [
+        ...TODOS_LOS_CUERPOS.slice(miIndice + 1),
+        ...TODOS_LOS_CUERPOS.slice(0, miIndice)
+    ];
+
+    // Mapeamos a los 4 oponentes en los 4 contenedores relativos del DOM
+    listaRivalesRotada.forEach((claveRival, index) => {
+        const slotsDestino = slotsRivalesDOM[index];
+        if (slotsDestino) {
+            renderCuerpoEspecifico(claveRival, slotsDestino);
+        }
     });
 }

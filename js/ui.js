@@ -3,50 +3,84 @@ import { firebaseMock, iniciarNuevoTurno } from './firebaseMock.js'; // Conectad
 
 const GAME_ID = 'game_001'; // ID de la sala de juego
 
-// DEFINIR ROL LOCAL: Cambiar a 'playerBlue' en la computadora del otro jugador
-const MI_ROL = 'playerOrange'; 
-const RIVAL_ROL = (MI_ROL === 'playerOrange') ? 'playerBlue' : 'playerOrange';
+// ESTADO GLOBAL DINÁMICO DE ROLES (Se llenan al elegir personaje)
+export let MI_ROL = null;
+export let MI_MANO_CLAVE = null;
+export let MI_CUERPO_CLAVE = null;
+
+const MAPA_ROLES = {
+    'playerO': { mano: 'playerOrange', cuerpo: 'bodyOrange' },
+    'playerB': { mano: 'playerBlue',   cuerpo: 'bodyBlue' },
+    'playerR': { mano: 'playerRed',    cuerpo: 'bodyRed' },
+    'playerY': { mano: 'playerYellow', cuerpo: 'bodyYellow' },
+    'playerG': { mano: 'playerGreen',  cuerpo: 'bodyGreen' }
+};
+
+// Función para registrar qué jugador está sentado en esta computadora
+export function asignarRolLocal(idBoton) {
+    MI_ROL = idBoton;
+    MI_MANO_CLAVE = MAPA_ROLES[idBoton].mano;
+    MI_CUERPO_CLAVE = MAPA_ROLES[idBoton].cuerpo;
+    console.log(`Rol local configurado: Mano -> ${MI_MANO_CLAVE}, Cuerpo -> ${MI_CUERPO_CLAVE}`);
+}
 
 // Los 'let' planos son cambiados por funciones que leen de la base de datos simulada
 // Centralizamos todo en un único objeto exportado para mantener la referencia viva
 export let estadoJuego = {
+    deck: [],
+    exileZone: [],
+    status: true,
+    // Manos
     playerOrange: [],
     playerBlue: [],
-    exileZone: [],
-    bodyZone: [],
-    deck: [],
-    status: true
+    playerRed: [],
+    playerYellow: [],
+    playerGreen: [],
+    // Cuerpos
+    bodyOrange: [],
+    bodyBlue: [],
+    bodyRed: [],
+    bodyYellow: [],
+    bodyGreen: []
 };
 
 // Shorthands para mantener compatibilidad con tus eventos visuales internos
 export function getStatus() { 
-    // Es mi turno si el estado de la DB coincide con mi rol
-    if (MI_ROL === 'playerOrange') return estadoJuego.status === true;
-    if (MI_ROL === 'playerBlue') return estadoJuego.status === false;
+    if (MI_MANO_CLAVE === 'playerOrange') return estadoJuego.status === true;
+    if (MI_MANO_CLAVE === 'playerBlue') return estadoJuego.status === false;
+
+    return estadoJuego.status === true; 
 }
 
 export async function iniciarJuego() {    
-    if (MI_ROL == 'playerOrange'){
+    if (MI_MANO_CLAVE == 'playerOrange'){
         Cards.buildDeck();
         Cards.mingle();
         
         let newDeck = [...Cards.deck];
-        let newHandPlayer = [];
-        let newHandOponent = [];
+        let handOrange = [];
+        let handBlue = [];
 
         for(let i=0; i<3; i++){    
-            newHandPlayer.push(newDeck.pop());
-            newHandOponent.push(newDeck.pop());
+            handOrange.push(newDeck.pop());
+            handBlue.push(newDeck.pop());
         }
 
         // (Sincronización del estado) en el "firebase"
         await firebaseMock.updateGame(GAME_ID, {
             deck: newDeck,
-            playerOrange: newHandPlayer,
-            playerBlue: newHandOponent,
             turn: true,
             exileZone: [],
-            bodyZone: []
+            playerOrange: handOrange,
+            playerBlue: handBlue,
+            playerRed: [],
+            playerYellow: [],
+            playerGreen: [],
+            bodyOrange: [],
+            bodyBlue: [],
+            bodyRed: [],
+            bodyYellow: [],
+            bodyGreen: []
         });
     }
 }
@@ -55,11 +89,20 @@ export async function iniciarJuego() {
 export async function syncDataBase(gameData) {
     if (gameData) {
         estadoJuego.deck = gameData.deck || [];
-        estadoJuego.playerOrange = gameData.playerOrange || [];
-        estadoJuego.playerBlue = gameData.playerBlue || [];
         estadoJuego.status = gameData.turn;
         estadoJuego.exileZone = gameData.exileZone || [];
-        estadoJuego.bodyZone = gameData.bodyZone || [];
+
+        estadoJuego.playerOrange = gameData.playerOrange || [];
+        estadoJuego.playerBlue = gameData.playerBlue || [];
+        estadoJuego.playerRed = gameData.playerRed || [];
+        estadoJuego.playerYellow = gameData.playerYellow || [];
+        estadoJuego.playerGreen = gameData.playerGreen || [];
+
+        estadoJuego.bodyOrange = gameData.bodyOrange || [];
+        estadoJuego.bodyBlue = gameData.bodyBlue || [];
+        estadoJuego.bodyRed = gameData.bodyRed || [];
+        estadoJuego.bodyYellow = gameData.bodyYellow || [];
+        estadoJuego.bodyGreen = gameData.bodyGreen || [];
         
         if (getStatus()) {
             iniciarNuevoTurno();
@@ -82,23 +125,23 @@ const buttonElement = document.getElementById('turn');
 // Función para actualizar la interfaz visual de la mano
 export function renderHand(keyword) {
     handTemp.innerHTML = '';
-    oponentHandElement.innerHTML = '';
+    // oponentHandElement.innerHTML = '';
 
-    const misCartas = estadoJuego[MI_ROL];
-    const cartasRival = estadoJuego[RIVAL_ROL];
+    const misCartas = estadoJuego[MI_MANO_CLAVE] || [];
+    // const cartasRival = estadoJuego[RIVAL_ROL];
 
     renderHandPlayer(misCartas, handTemp);
-    renderHandPlayer(cartasRival, oponentHandElement);
+    // renderHandPlayer(cartasRival, oponentHandElement);
 
     const esMiTurno = getStatus();
     if (esMiTurno) {
         handTemp.classList.remove('disabled');
-        oponentHandElement.classList.add('disabled');
+        // oponentHandElement.classList.add('disabled');
         buttonElement.disabled = false;
         buttonElement.innerText = "Finalizar Turno";
     } else {
         handTemp.classList.add('disabled');
-        oponentHandElement.classList.remove('disabled');
+        // oponentHandElement.classList.remove('disabled');
         buttonElement.disabled = true;
         buttonElement.innerText = "Turno del Rival";
     }
@@ -139,7 +182,7 @@ async function drawCard() {
         return;
     }
 
-    const miMano = estadoJuego[MI_ROL];
+    const miMano = estadoJuego[MI_MANO_CLAVE];
 
     if (miMano.length >= 3) {
         alert("Tu mano ya está llena (máximo 3 cartas).");
@@ -152,7 +195,7 @@ async function drawCard() {
 
     await firebaseMock.updateGame(GAME_ID, {
         deck: estadoJuego.deck,
-        [MI_ROL]: miMano
+        [MI_MANO_CLAVE]: miMano
     });
 }
 

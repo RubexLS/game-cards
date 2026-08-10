@@ -5,8 +5,8 @@ const GAME_ID = 'game_001'; // ID de la sala de juego
 
 // ESTADO GLOBAL DINÁMICO DE ROLES (Se llenan al elegir personaje)
 export let MI_ROL = null;
-export let MI_MANO_CLAVE = null;
-export let MI_CUERPO_CLAVE = null;
+export let HAND_KEY = null;
+export let BODY_KEY = null;
 
 const MAPA_ROLES = {
     'playerO': { mano: 'playerOrange', cuerpo: 'bodyOrange' },
@@ -17,16 +17,17 @@ const MAPA_ROLES = {
 };
 
 // Función para registrar qué jugador está sentado en esta computadora
-export function asignarRolLocal(idBoton) {
-    MI_ROL = idBoton;
-    MI_MANO_CLAVE = MAPA_ROLES[idBoton].mano;
-    MI_CUERPO_CLAVE = MAPA_ROLES[idBoton].cuerpo;
-    console.log(`Rol local configurado: Mano -> ${MI_MANO_CLAVE}, Cuerpo -> ${MI_CUERPO_CLAVE}`);
+export function assignPlayer(idButton) {
+    MI_ROL = idButton;
+    HAND_KEY = MAPA_ROLES[idButton].mano;
+    BODY_KEY = MAPA_ROLES[idButton].cuerpo;
+    
+    // localStorage.setItem(`rol_${GAME_ID}`, idButton); // solo para online
 }
 
 // Los 'let' planos son cambiados por funciones que leen de la base de datos simulada
 // Centralizamos todo en un único objeto exportado para mantener la referencia viva
-export let estadoJuego = {
+export let gameState = {
     deck: [],
     exileZone: [],
     status: true,
@@ -47,67 +48,83 @@ export let estadoJuego = {
 // Shorthands para mantener compatibilidad con tus eventos visuales internos
 export function getStatus() { 
     // Es tu turno si la clave de tu mano local coincide exactamente con el turno activo en Firebase
-    return estadoJuego.status === MI_MANO_CLAVE;
+    return gameState.status === HAND_KEY;
 }
 
 export async function iniciarJuego() {    
-    if (MI_MANO_CLAVE == 'playerOrange'){
+    const gameData = await firebaseMock.getGame(GAME_ID);
+    if (!gameData || !gameData.unavailablePlayers || gameData.unavailablePlayers.length === 0) {
+        alert("No hay suficientes jugadores en la sala para iniciar.");
+        return;
+    }
+
+    // Obtener los IDs de los botones seleccionados (ej: ['playerO', 'playerB'])
+    const rolesConectados = gameData.unavailablePlayers;
+    const idBotonHost = rolesConectados[0]; 
+    const manoClaveHost = MAPA_ROLES[idBotonHost].mano;
+
+    if (HAND_KEY == manoClaveHost){
+
         Cards.buildDeck();
         Cards.mingle();
-        
         let newDeck = [...Cards.deck];
-        let handOrange = [];
-        let handBlue = [];
-        let handRed = [];
-        let handYellow = [];
-        let handGreen = [];
 
-        for(let i=0; i<3; i++){    
-            handOrange.push(newDeck.pop());
-            handBlue.push(newDeck.pop());
-            handRed.push(newDeck.pop());
-            handYellow.push(newDeck.pop());
-            handGreen.push(newDeck.pop());
-        }
-
-        // (Sincronización del estado) en el "firebase"
-        await firebaseMock.updateGame(GAME_ID, {
-            state: "en_progreso", // <-- ¡PASO CLAVE! Esto avisa a todo Firebase que el juego inició
-            deck: newDeck,
-            turn: "playerOrange",
+        let dataUpdate = {
+            state: "en_progreso",
+            turn: manoClaveHost,
             exileZone: [],
-            playerOrange: handOrange,
-            playerBlue: handBlue,
-            playerRed: handRed,
-            playerYellow: handYellow,
-            playerGreen: handGreen,
-            bodyOrange: [],
-            bodyBlue: [],
-            bodyRed: [],
-            bodyYellow: [],
-            bodyGreen: []
+            discardZone: []
+        };
+
+        // 4. REPARTO DINÁMICO: Reparte 3 cartas SOLO a los que se unieron
+        rolesConectados.forEach(idButton => {
+            const claves = MAPA_ROLES[idButton]; // Traduce 'playerO' a 'playerOrange' y 'bodyOrange'
+            
+            let manoJugador = [];
+            for (let i = 0; i < 3; i++) {
+                if (newDeck.length > 0) {
+                    manoJugador.push(newDeck.pop());
+                }
+            }
+
+            // Creamos las propiedades en Firebase al vuelo solo para este jugador
+            dataUpdate[claves.mano] = manoJugador;
+            dataUpdate[claves.cuerpo] = [];
         });
+
+
+        // 5. Guardar el estado del mazo remanente
+        dataUpdate.deck = newDeck;
+
+        // 6. Subir a Firebase (Si elegiste 2 jugadores, solo se restarán 6 cartas del mazo)
+        await firebaseMock.updateGame(GAME_ID, dataUpdate);
+    }else{
+        alert("Solo el creador de la sala (el primer jugador en unirse) puede iniciar la partida. Esperando a que inicie...");
     }
 }
 
 // Trae los datos del JSON/Firebase y actualiza las variables locales
 export async function syncDataBase(gameData) {
     if (gameData) {
-        estadoJuego.deck = gameData.deck || [];
-        estadoJuego.status = gameData.turn;
-        estadoJuego.exileZone = gameData.exileZone || [];
+        gameState.deck = gameData.deck || [];
+        gameState.status = gameData.turn;
+        gameState.exileZone = gameData.exileZone || [];
 
-        estadoJuego.playerOrange = gameData.playerOrange || [];
-        estadoJuego.playerBlue = gameData.playerBlue || [];
-        estadoJuego.playerRed = gameData.playerRed || [];
-        estadoJuego.playerYellow = gameData.playerYellow || [];
-        estadoJuego.playerGreen = gameData.playerGreen || [];
+        // control
+        const salaEspera = gameData.unavailablePlayers || [];
+        gameState.jugadoresActivos = salaEspera.map(idBoton => MAPA_ROLES[idBoton].mano);
 
-        estadoJuego.bodyOrange = gameData.bodyOrange || [];
-        estadoJuego.bodyBlue = gameData.bodyBlue || [];
-        estadoJuego.bodyRed = gameData.bodyRed || [];
-        estadoJuego.bodyYellow = gameData.bodyYellow || [];
-        estadoJuego.bodyGreen = gameData.bodyGreen || [];
+        gameState.playerOrange = gameData.playerOrange || [];
+        gameState.playerBlue = gameData.playerBlue || [];
+        gameState.playerRed = gameData.playerRed || [];
+        gameState.playerYellow = gameData.playerYellow || [];
+        gameState.playerGreen = gameData.playerGreen || [];
+
+        gameState.bodyOrange = gameData.bodyOrange || [];
+        gameState.bodyBlue = gameData.bodyBlue || [];
+        gameState.bodyRed = gameData.bodyRed || [];
+        gameState.bodyYellow = gameData.bodyYellow || [];
+        gameState.bodyGreen = gameData.bodyGreen || [];
         
         if (getStatus()) {
             iniciarNuevoTurno();
@@ -132,8 +149,8 @@ export function renderHand(keyword) {
     handTemp.innerHTML = '';
     // oponentHandElement.innerHTML = '';
 
-    const misCartas = estadoJuego[MI_MANO_CLAVE] || [];
-    // const cartasRival = estadoJuego[RIVAL_ROL];
+    const misCartas = gameState[HAND_KEY] || [];
+    // const cartasRival = gameState[RIVAL_ROL];
 
     renderHandPlayer(misCartas, handTemp);
     // renderHandPlayer(cartasRival, oponentHandElement);
@@ -154,15 +171,15 @@ export function renderHand(keyword) {
 
 // Función para actualizar los contadores y zonas de la mesa
 export function renderBoard(cardImage) {
-    deckCountElement.innerText = estadoJuego.deck.length;
+    deckCountElement.innerText = gameState.deck.length;
     
-    if (estadoJuego.deck.length === 0) {
+    if (gameState.deck.length === 0) {
         deckElement.style.backgroundColor = '#7f8c8d';
         deckElement.innerText = 'Vacío';
     }
 
-    if (estadoJuego.exileZone.length > 0) {
-        const lastCard = estadoJuego.exileZone[estadoJuego.exileZone.length - 1];
+    if (gameState.exileZone.length > 0) {
+        const lastCard = gameState.exileZone[gameState.exileZone.length - 1];
         exileSlot.className = 'card';
         exileSlot.innerText = '';
         // exileSlot.innerText = exileZone[exileZone.length - 1]; // nombres de las cartas
@@ -182,25 +199,25 @@ async function drawCard() {
         return;
     }
 
-    if (estadoJuego.deck.length === 0) {
+    if (gameState.deck.length === 0) {
         alert("¡No quedan cartas en el mazo!");
         return;
     }
 
-    const miMano = estadoJuego[MI_MANO_CLAVE];
+    const hand = gameState[HAND_KEY];
 
-    if (miMano.length >= 3) {
+    if (hand.length >= 3) {
         alert("Tu mano ya está llena (máximo 3 cartas).");
         return;
     }
 
     // Modificacion de los datos temporalmente
-    const nextCard = estadoJuego.deck.pop();
-    miMano.push(nextCard);
+    const nextCard = gameState.deck.pop();
+    hand.push(nextCard);
 
     await firebaseMock.updateGame(GAME_ID, {
-        deck: estadoJuego.deck,
-        [MI_MANO_CLAVE]: miMano
+        deck: gameState.deck,
+        [HAND_KEY]: hand
     });
 }
 
@@ -213,16 +230,31 @@ buttonElement.addEventListener('click', async () => {
 
     // Definimos el orden oficial de los turnos en el juego
     const ORDEN_TURNOS = ['playerOrange', 'playerBlue', 'playerRed', 'playerYellow', 'playerGreen'];
+
+    const jugadoresEnPartida = ORDEN_TURNOS.filter(player => gameState.jugadoresActivos.includes(player));
     
     // Buscamos el índice del jugador actual
-    const indiceActual = ORDEN_TURNOS.indexOf(MI_MANO_CLAVE);
+    const indiceActual = jugadoresEnPartida.indexOf(HAND_KEY);
     
     // Calculamos el siguiente índice (vuelve a 0 cuando llega al final del array)
-    const siguienteIndice = (indiceActual + 1) % ORDEN_TURNOS.length;
-    const siguienteJugador = ORDEN_TURNOS[siguienteIndice];
+    const siguienteIndice = (indiceActual + 1) % jugadoresEnPartida.length;
+    const siguienteJugador = jugadoresEnPartida[siguienteIndice];
 
     // Actualizamos el string del turno en la nube
     await firebaseMock.updateGame(GAME_ID, {
         turn: siguienteJugador 
     });
 });
+
+// solo para online
+// export function recuperarRolGuardado() {
+//     const rolGuardado = localStorage.getItem(`rol_${GAME_ID}`);
+//     if (rolGuardado && MAPA_ROLES[rolGuardado]) {
+//         MI_ROL = rolGuardado;
+//         HAND_KEY = MAPA_ROLES[rolGuardado].mano;
+//         BODY_KEY = MAPA_ROLES[rolGuardado].cuerpo;
+//         console.log(`🔄 Rol recuperado automáticamente: ${HAND_KEY}`);
+//         return rolGuardado;
+//     }
+//     return null;
+// }

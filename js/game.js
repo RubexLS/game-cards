@@ -1,19 +1,18 @@
 export { Cards };
 
-import { firebaseMock, obtenerEstadoBotonTurno, registrarUsoCarta } from './firebaseMock.js';
+import { firebaseMock, buttonStatus, recordUsage } from './firebaseMock.js';
 
 const GAME_ID = 'game_001';
 
 import {
-        estadoJuego, 
-        handTemp, 
-        // oponentHandElement, 
+        gameState, 
+        handTemp,
         renderBoard, 
         renderHand,
         getStatus,
         syncDataBase,
-        MI_MANO_CLAVE,
-        MI_CUERPO_CLAVE
+        HAND_KEY,
+        BODY_KEY
 } from './ui.js';
 
 const options = document.getElementById('options');
@@ -24,7 +23,7 @@ const organStomach = document.getElementById('stomach-slot');
 const organBone = document.getElementById('bone-slot');
 const organNervous = document.getElementById('nervous-slot');
 
-const slotsRivalesDOM = [
+const slotsRivalsDOM = [
     {
         brain: document.getElementById('brain-slot-rivalOne'),
         heart: document.getElementById('heart-slot-rivalOne'),
@@ -55,7 +54,7 @@ const slotsRivalesDOM = [
     }
 ];
 
-const TODOS_LOS_CUERPOS = ['bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen'];
+const ALL_BODY = ['bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen'];
 
 class Cards {
     static typeCards = [];
@@ -118,12 +117,11 @@ let transplant = new Cards('transplant', '/assets/cards/transplant.png', 3, 'tre
 let glove = new Cards('glove', '/assets/cards/glove.png', 1, 'treatment', 'purple');
 let medicalError = new Cards('medical_error', '/assets/cards/medical_error.png', 1, 'treatment', 'purple');
 
-
-
+//Renderizado de la mano del jugador y control de las acciones con las cartas de la misma
 export function renderHandPlayer(currentPLayer, contenedorHTML) {
     contenedorHTML.innerHTML = '';
     //verifica si es el contenedor del jugador
-    const esMiMano = (contenedorHTML === handTemp);
+    const myHand = (contenedorHTML === handTemp);
 
     currentPLayer.forEach((card, index) => {
         const cardDiv = document.createElement('div');
@@ -132,10 +130,10 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
         else if (index === 1) cardDiv.className = 'card medium-card';
         else if (index === 2) cardDiv.className = 'card right-card';
 
-        // cardDiv.innerText = card.name; // nombre de las cartas
         cardDiv.style.backgroundImage = `url('${card.cardPhoto}')`;
-        cardDiv.style.backgroundSize = "cover";
-        // Al hacer clic en una carta de la mano, se destierra
+        cardDiv.style.backgroundSize = "cover"; // Hasta este punto se grafica cada una de las cartas de la mano
+        
+        //acciones disponibles al seleccionar una carta
         cardDiv.addEventListener('click', () => {
             options.innerHTML = '';
 
@@ -143,7 +141,7 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             optionUse.className = 'option use';
             optionUse.innerText = 'Usar';
 
-            if (obtenerEstadoBotonTurno()) {
+            if (buttonStatus()) {
                 optionUse.disabled = true;
                 optionUse.innerText = '1 por turno';
             }
@@ -162,10 +160,10 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
 
             optionUse.addEventListener('click', async () => {
                 // en caso de multiples clicks
-                if (obtenerEstadoBotonTurno()) return; 
+                if (buttonStatus()) return; 
 
                 // Bloquea el estado local del botón de forma inmediata
-                registrarUsoCarta();
+                recordUsage();
                 optionUse.disabled = true;
                 options.innerHTML = '';
 
@@ -177,98 +175,50 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
 }
 
 async function exileCard(cardIndex) {
-    // Detectamos dinámicamente cuál es mi propiedad en la base de datos según el estado del turno
-    // const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
-    let miManoClave = MI_MANO_CLAVE;
-    let miMano = estadoJuego[miManoClave];
+    let handKey = HAND_KEY;
+    let hand = gameState[handKey];
 
-    if (miMano.length === 0) return;
+    if (hand.length === 0) return;
 
     // Quita la carta del array local
-    const excludedCard = miMano.splice(cardIndex, 1)[0];
-
-    // Guardamos la URL limpia de la foto directamente en el historial de descarte
-    // const urlFormateada = `url('${excludedCard.cardPhoto}')`;
-    estadoJuego.exileZone.push(excludedCard.cardPhoto);
+    const excludedCard = hand.splice(cardIndex, 1)[0];
+    gameState.exileZone.push(excludedCard.cardPhoto);
 
     await firebaseMock.updateGame(GAME_ID, {
-        [miManoClave]: miMano,
-        exileZone: estadoJuego.exileZone
+        [handKey]: hand,
+        exileZone: gameState.exileZone
     });
 }
 
 async function useCard(cardIndex) {
-    // const miClaveRol = estadoJuego.status ? 'playerOrange' : 'playerBlue';
-    let miMano = estadoJuego[MI_MANO_CLAVE];
+    let hand = gameState[HAND_KEY];
 
-    if (!miMano || miMano.length === 0) return;
+    if (!hand || hand.length === 0) return;
     
-    const organCard = miMano.splice(cardIndex, 1)[0];
+    const organCard = hand.splice(cardIndex, 1)[0];
 
-    estadoJuego[MI_CUERPO_CLAVE].push({
+    gameState[BODY_KEY].push({
         name: organCard.name,
         photo: `url('${organCard.cardPhoto}')`
     });
 
     await firebaseMock.updateGame(GAME_ID, {
-        [MI_MANO_CLAVE]: miMano,
-        [MI_CUERPO_CLAVE]: estadoJuego[MI_CUERPO_CLAVE]
+        [HAND_KEY]: hand,
+        [BODY_KEY]: gameState[BODY_KEY]
     });
 }
 
-// export function renderBody(cardImage){
-//     // 1. Limpiar todos los slots antes de redibujar para evitar duplicados visuales
-//     [organBrain, organHeart, organStomach, organBone, organNervous].forEach(slot => slot.innerHTML = 'Vacío');
-
-//     const miCuerpoActual = estadoJuego[MI_CUERPO_CLAVE] || [];
-
-//     miCuerpoActual.forEach(card => {
-//         let organSlot;
-//         const organDiv = document.createElement('div');
-
-//         switch (card.name) {
-//             case 'brain':
-//                 organDiv.className = 'organ brain-card';
-//                 organSlot = organBrain;
-//                 break;
-//             case 'heart':
-//                 organDiv.className = 'organ heart-card';
-//                 organSlot = organHeart;
-//                 break;
-//             case 'stomach':
-//                 organDiv.className = 'organ stomach-card';
-//                 organSlot = organStomach;
-//                 break;
-//             case 'bone':
-//                 organDiv.className = 'organ bone-card';
-//                 organSlot = organBone;
-//                 break;
-//             default:
-//                 organDiv.className = 'organ nervous-card';
-//                 organSlot = organNervous;
-//                 break;
-//         }
-
-//         organSlot.innerText = '';
-//         organDiv.style.backgroundImage = card.photo;
-//         organDiv.style.backgroundSize = 'cover';
-//         organDiv.style.width = '100%';
-//         organDiv.style.height = '100%';
-//         organSlot.appendChild(organDiv);
-//     });
-// }
-
-// FUNCIÓN UNIVERSAL DE RENDERIZADO
-export function renderCuerpoEspecifico(claveCuerpo, slotsHTML) {
+// Renderizado del cuerpo del jugador y sus rivales
+export function renderBodyBoard (bodyKey, slotsHTML) {
     if (!slotsHTML) return;
 
     [slotsHTML.brain, slotsHTML.heart, slotsHTML.stomach, slotsHTML.bone, slotsHTML.nervous].forEach(slot => {
         if (slot) slot.innerHTML = ''; 
     });
 
-    const cartasCuerpo = estadoJuego[claveCuerpo] || [];
+    const bodyCards = gameState[bodyKey] || [];
 
-    cartasCuerpo.forEach(card => {
+    bodyCards.forEach(card => {
         let organSlot;
         const organDiv = document.createElement('div');
 
@@ -287,7 +237,7 @@ export function renderCuerpoEspecifico(claveCuerpo, slotsHTML) {
             organDiv.style.height = '100%';
             
             // Atributos de metadatos listos para cuando lances virus
-            organDiv.dataset.propietario = claveCuerpo; 
+            organDiv.dataset.propietario = bodyKey; 
             organDiv.dataset.organo = card.name;
 
             organSlot.appendChild(organDiv);
@@ -303,33 +253,33 @@ export function renderCuerpoEspecifico(claveCuerpo, slotsHTML) {
 
 // FUNCIÓN PRINCIPAL DE INYECCIÓN VISUAL
 export function renderBody() {
-    // A. DIBUJAR MI PROPIO CUERPO EN LA IZQUIERDA
-    const misSlotsLocales = {
+    // Dibuja el cuerpo local
+    const myOrganSlots = {
         brain: organBrain,
         heart: organHeart,
         stomach: organStomach,
         bone: organBone,
         nervous: organNervous
     };
-    renderCuerpoEspecifico(MI_CUERPO_CLAVE, misSlotsLocales);
+    renderBodyBoard(BODY_KEY, myOrganSlots);
 
-    // B. ROTAR Y DIBUJAR A LOS RIVALES EN LA DERECHA
-    if (!MI_CUERPO_CLAVE) return;
+    // Rota y dibuja los cuerpos de los rivales
+    if (!BODY_KEY) return;
 
-    // Buscamos en qué posición del array global estoy parado
-    const miIndice = TODOS_LOS_CUERPOS.indexOf(MI_CUERPO_CLAVE);
+    // Buscamos en qué posición del array global esta ubicado
+    const miIndice = ALL_BODY.indexOf(BODY_KEY);
 
     // Cortamos y reordenamos el array para que los que están "después" pasen al frente
     const listaRivalesRotada = [
-        ...TODOS_LOS_CUERPOS.slice(miIndice + 1),
-        ...TODOS_LOS_CUERPOS.slice(0, miIndice)
+        ...ALL_BODY.slice(miIndice + 1),
+        ...ALL_BODY.slice(0, miIndice)
     ];
 
-    // Mapeamos a los 4 oponentes en los 4 contenedores relativos del DOM
+    // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
     listaRivalesRotada.forEach((claveRival, index) => {
-        const slotsDestino = slotsRivalesDOM[index];
+        const slotsDestino = slotsRivalsDOM[index];
         if (slotsDestino) {
-            renderCuerpoEspecifico(claveRival, slotsDestino);
+            renderBodyBoard(claveRival, slotsDestino);
         }
     });
 }

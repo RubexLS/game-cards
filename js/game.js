@@ -267,19 +267,19 @@ export function renderBody() {
     if (!BODY_KEY) return;
 
     // Buscamos en qué posición del array global esta ubicado
-    const miIndice = ALL_BODY.indexOf(BODY_KEY);
+    const indexLocation = ALL_BODY.indexOf(BODY_KEY);
 
-    // Cortamos y reordenamos el array para que los que están "después" pasen al frente
-    const listaRivalesRotada = [
-        ...ALL_BODY.slice(miIndice + 1),
-        ...ALL_BODY.slice(0, miIndice)
+    // Corte y reordenamiento del array 
+    const rotatedRivals = [
+        ...ALL_BODY.slice(indexLocation + 1),
+        ...ALL_BODY.slice(0, indexLocation)
     ];
 
     // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
-    listaRivalesRotada.forEach((claveRival, index) => {
+    rotatedRivals.forEach((rivalKey, index) => {
         const slotsDestino = slotsRivalsDOM[index];
         if (slotsDestino) {
-            renderBodyBoard(claveRival, slotsDestino);
+            renderBodyBoard(rivalKey, slotsDestino);
         }
     });
 }

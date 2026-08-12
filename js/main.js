@@ -1,20 +1,18 @@
 import { 
     startGame, 
-    syncDataBase, 
-    assignPlayer
+    syncDataBase
     // rolRecovery
 } from './ui.js';
 
+import { assignPlayer, GAME_ID } from './state.js';
 import { firebaseMock } from './firebaseMock.js';
 
 const screenMenu = document.getElementById('menu');
 const screenGame = document.getElementById('viewMap');
 const buttonPlay = document.getElementById('play');
-
-const GAME_ID = "game_001";
-let preliminarySelection = null;
 const buttons = document.querySelectorAll('.select');
 
+let preliminarySelection = null;
 let gameStarted = false;
 
 //online
@@ -110,9 +108,8 @@ async function block(currentSelection) {
     }
     
     preliminarySelection = currentSelection;
-
     notAvailable.push(currentSelection.id);
-
+    
     assignPlayer(currentSelection.id);
 
     await firebaseMock.updateGame(GAME_ID, {
@@ -134,6 +131,3 @@ buttonPlay.addEventListener('click', async () => {
     
     await startGame();
 });
-
-
-

@@ -1,54 +1,13 @@
-import { Cards, renderHandPlayer, renderBody } from './game.js';
+import { gameState, HAND_KEY, BODY_KEY, MAP_ROL, getStatus, GAME_ID } from './state.js';
 import { firebaseMock, passTurn } from './firebaseMock.js';
+import { Cards, drawCardrawCard } from './game.js';
 
-const GAME_ID = 'game_001'; // ID de la sala de juego
-
-// Estado global del jugador, mano y cuerpo
-export let MI_ROL = null;
-export let HAND_KEY = null;
-export let BODY_KEY = null;
-
-const MAP_ROL = {
-    'playerO': { mano: 'playerOrange', cuerpo: 'bodyOrange' },
-    'playerB': { mano: 'playerBlue',   cuerpo: 'bodyBlue' },
-    'playerR': { mano: 'playerRed',    cuerpo: 'bodyRed' },
-    'playerY': { mano: 'playerYellow', cuerpo: 'bodyYellow' },
-    'playerG': { mano: 'playerGreen',  cuerpo: 'bodyGreen' }
-};
-
-// Asignacion de jugador. mano y cyerpo al usuario
-export function assignPlayer(idButton) {
-    MI_ROL = idButton;
-    HAND_KEY = MAP_ROL[idButton].mano;
-    BODY_KEY = MAP_ROL[idButton].cuerpo;
-    
-    // localStorage.setItem(`rol_${GAME_ID}`, idButton); // solo para online
-}
-
-// único objeto exportado para mantener la referencia online
-export let gameState = {
-    deck: [],
-    exileZone: [],
-    status: true,
-    // Manos
-    playerOrange: [],
-    playerBlue: [],
-    playerRed: [],
-    playerYellow: [],
-    playerGreen: [],
-    // Cuerpos
-    bodyOrange: [],
-    bodyBlue: [],
-    bodyRed: [],
-    bodyYellow: [],
-    bodyGreen: []
-};
-
-// Shorthand para mantener compatibilidad con cada uno de los eventos del juego
-export function getStatus() { 
-    // Es tu turno si la clave de tu mano local coincide exactamente con el turno activo en Firebase
-    return gameState.status === HAND_KEY;
-}
+// Elementos del DOM
+export const handTemp = document.getElementById('player-hand');
+const deckElement = document.getElementById('deck');
+const deckCountElement = document.getElementById('deck-count');
+const exileSlot = document.getElementById('exile-slot');
+const buttonElement = document.getElementById('turn');
 
 export async function startGame() {    
     const gameData = await firebaseMock.getGame(GAME_ID);
@@ -102,51 +61,38 @@ export async function startGame() {
 
 // Trae los datos de Firebase y actualiza las variables locales
 export async function syncDataBase(gameData) {
-    if (gameData) {
-        gameState.deck = gameData.deck || [];
-        gameState.status = gameData.turn;
-        gameState.exileZone = gameData.exileZone || [];
+    if (!gameData) return;
 
-        // control
-        const lobby = gameData.unavailablePlayers || [];
-        gameState.activePlayers = lobby.map(idButton => MAP_ROL[idButton].mano);
+    gameState.deck = gameData.deck || [];
+    gameState.status = gameData.turn;
+    gameState.exileZone = gameData.exileZone || [];
 
-        gameState.playerOrange = gameData.playerOrange || [];
-        gameState.playerBlue = gameData.playerBlue || [];
-        gameState.playerRed = gameData.playerRed || [];
-        gameState.playerYellow = gameData.playerYellow || [];
-        gameState.playerGreen = gameData.playerGreen || [];
+    // control
+    const lobby = gameData.unavailablePlayers || [];
+    gameState.activePlayers = lobby.map(idButton => MAP_ROL[idButton].mano);
 
-        gameState.bodyOrange = gameData.bodyOrange || [];
-        gameState.bodyBlue = gameData.bodyBlue || [];
-        gameState.bodyRed = gameData.bodyRed || [];
-        gameState.bodyYellow = gameData.bodyYellow || [];
-        gameState.bodyGreen = gameData.bodyGreen || [];
+    ['Orange', 'Blue', 'Red', 'Yellow', 'Green'].forEach(color => {
+        gameState[`player${color}`] = gameData[`player${color}`] || [];
+        gameState[`body${color}`] = gameData[`body${color}`] || [];
+    });
         
-        if (getStatus()) {
-            passTurn();
-        }
-
-        renderHand();
-        renderBoard();
-        renderBody();
+    if (getStatus()) {
+        passTurn();
     }
-}
 
-// Elementos del DOM
-const deckElement = document.getElementById('deck');
-const deckCountElement = document.getElementById('deck-count');
-export let handTemp = document.getElementById('player-hand');
-const exileSlot = document.getElementById('exile-slot');
-const buttonElement = document.getElementById('turn');
+    renderHand();
+    renderBoard();
+    import('./game.js').then(m => m.renderBody()); // Import dinámico para evitar bloqueos
+}
 
 // Función para actualizar la interfaz visual de la mano
 export function renderHand(keyword) {
     handTemp.innerHTML = '';
-
     const myCards = gameState[HAND_KEY] || [];
 
-    renderHandPlayer(myCards, handTemp);
+    import('./game.js').then(m => {
+        m.renderHandPlayer(myCards, handTemp);
+    });
 
     if (getStatus()) {
         handTemp.classList.remove('disabled');
@@ -162,7 +108,6 @@ export function renderHand(keyword) {
 // renderizado y actualizado de los slots del tablero
 export function renderBoard(cardImage) {
     deckCountElement.innerText = gameState.deck.length;
-    
     if (gameState.deck.length === 0) {
         deckElement.style.backgroundColor = '#7f8c8d';
         deckElement.innerText = 'Vacío';
@@ -181,33 +126,42 @@ export function renderBoard(cardImage) {
     }
 }
 
-// Lógica para el robo de cartas
-async function drawCard() {
-    // Bloquear si no es mi turno
-    if (!getStatus()) {
-        alert("No es tu turno para robar.");
-        return;
-    }
+// Renderizado del cuerpo del jugador y sus rivales
+export function renderBodyBoard (bodyKey, slotsHTML) {
+    if (!slotsHTML) return;
 
-    if (gameState.deck.length === 0) {
-        alert("¡No quedan cartas en el mazo!");
-        return;
-    }
+    Object.values(slotsHTML).forEach(slot => { if (slot) slot.innerHTML = ''; });
 
-    const hand = gameState[HAND_KEY];
+    const bodyCards = gameState[bodyKey] || [];
+    bodyCards.forEach(card => {
+        let organSlot;
+        const organDiv = document.createElement('div');
 
-    if (hand.length >= 3) {
-        alert("Tu mano ya está llena (máximo 3 cartas).");
-        return;
-    }
+        switch (card.name) {
+            case 'brain': organDiv.className = 'organ brain-card'; organSlot = slotsHTML.brain; break;
+            case 'heart': organDiv.className = 'organ heart-card'; organSlot = slotsHTML.heart; break;
+            case 'stomach': organDiv.className = 'organ stomach-card'; organSlot = slotsHTML.stomach; break;
+            case 'bone': organDiv.className = 'organ bone-card'; organSlot = slotsHTML.bone; break;
+            default: organDiv.className = 'organ nervous-card'; organSlot = slotsHTML.nervous; break;
+        }
 
-    // Modificacion de los datos temporalmente
-    const nextCard = gameState.deck.pop();
-    hand.push(nextCard);
+        if (organSlot) {
+            organDiv.style.backgroundImage = `url('${card.cardPhoto}')`;
+            organDiv.style.backgroundSize = 'cover';
+            organDiv.style.width = '100%';
+            organDiv.style.height = '100%';
+            
+            // Atributos de metadatos listos para cuando lances virus
+            organDiv.dataset.propietario = bodyKey; 
+            organDiv.dataset.organo = card.name;
+            organSlot.appendChild(organDiv);
+        }
+    });
 
-    await firebaseMock.updateGame(GAME_ID, {
-        deck: gameState.deck,
-        [HAND_KEY]: hand
+    Object.values(slotsHTML).forEach(slot => {
+        if (slot && slot.children.length === 0) {
+            slot.innerText = 'Vacío';
+        }
     });
 }
 
@@ -219,7 +173,6 @@ buttonElement.addEventListener('click', async () => {
     if (!getStatus()) return; // Por seguridad
 
     const orderPlayers = ['playerOrange', 'playerBlue', 'playerRed', 'playerYellow', 'playerGreen'];
-
     const playersInGame = orderPlayers.filter(player => gameState.activePlayers.includes(player));
     
     // índice del jugador actual

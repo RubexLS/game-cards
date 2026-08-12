@@ -1,27 +1,15 @@
-export { Cards };
-
 import { firebaseMock, buttonStatus, recordUsage } from './firebaseMock.js';
-
-const GAME_ID = 'game_001';
-
-import {
-        gameState, 
-        handTemp,
-        renderBoard, 
-        renderHand,
-        getStatus,
-        syncDataBase,
-        HAND_KEY,
-        BODY_KEY
-} from './ui.js';
+import { renderBodyBoard, handTemp } from './ui.js';
+import { gameState, HAND_KEY, BODY_KEY, getStatus, GAME_ID } from './state.js';
 
 const options = document.getElementById('options');
+const ALL_BODY = ['bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen'];
 
-const organBrain = document.getElementById('brain-slot');
-const organHeart = document.getElementById('heart-slot');
-const organStomach = document.getElementById('stomach-slot');
-const organBone = document.getElementById('bone-slot');
-const organNervous = document.getElementById('nervous-slot');
+export const organBrain = document.getElementById('brain-slot');
+export const organHeart = document.getElementById('heart-slot');
+export const organStomach = document.getElementById('stomach-slot');
+export const organBone = document.getElementById('bone-slot');
+export const organNervous = document.getElementById('nervous-slot');
 
 const slotsRivalsDOM = [
     {
@@ -54,9 +42,7 @@ const slotsRivalsDOM = [
     }
 ];
 
-const ALL_BODY = ['bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen'];
-
-class Cards {
+export class Cards {
     static typeCards = [];
     static deck = [];
 
@@ -67,8 +53,6 @@ class Cards {
         this.amount = amount
         this.type = type
         this.color = color
-        this.w = 40
-        this.h = 40
     }
 
     static buildDeck(){
@@ -120,8 +104,6 @@ let medicalError = new Cards('medical_error', '/assets/cards/medical_error.png',
 //Renderizado de la mano del jugador y control de las acciones con las cartas de la misma
 export function renderHandPlayer(currentPLayer, contenedorHTML) {
     contenedorHTML.innerHTML = '';
-    //verifica si es el contenedor del jugador
-    const myHand = (contenedorHTML === handTemp);
 
     currentPLayer.forEach((card, index) => {
         const cardDiv = document.createElement('div');
@@ -139,12 +121,8 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
 
             const optionUse = document.createElement('button');
             optionUse.className = 'option use';
-            optionUse.innerText = 'Usar';
-
-            if (buttonStatus()) {
-                optionUse.disabled = true;
-                optionUse.innerText = '1 por turno';
-            }
+            optionUse.innerText = buttonStatus() ? '1 por turno' : 'Usar';
+            optionUse.disabled = buttonStatus();
             
             const optionDiscard = document.createElement('button');
             optionDiscard.className = 'option discard';
@@ -174,10 +152,26 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
     });
 }
 
-async function exileCard(cardIndex) {
-    let handKey = HAND_KEY;
-    let hand = gameState[handKey];
+export async function drawCard() {
+    // Bloquear si no es mi turno
+    if (!getStatus()) { alert("No es tu turno para robar."); return; }
+    if (gameState.deck.length === 0) { alert("¡No quedan cartas!"); return; }
+    
+    const hand = gameState[HAND_KEY];
+    if (hand.length >= 3) { alert("Tu mano está llena."); return; }
 
+    // Modificacion de los datos temporalmente
+    const nextCard = gameState.deck.pop();
+    hand.push(nextCard);
+
+    await firebaseMock.updateGame(GAME_ID, {
+        deck: gameState.deck, 
+        [HAND_KEY]: hand 
+    });
+}
+
+async function exileCard(cardIndex) {
+    let hand = gameState[HAND_KEY];
     if (hand.length === 0) return;
 
     // Quita la carta del array local
@@ -192,14 +186,13 @@ async function exileCard(cardIndex) {
 
 async function useCard(cardIndex) {
     let hand = gameState[HAND_KEY];
-
     if (!hand || hand.length === 0) return;
     
     const organCard = hand.splice(cardIndex, 1)[0];
 
     gameState[BODY_KEY].push({
         name: organCard.name,
-        photo: `url('${organCard.cardPhoto}')`
+        cardPhoto: organCard.cardPhoto
     });
 
     await firebaseMock.updateGame(GAME_ID, {
@@ -208,50 +201,7 @@ async function useCard(cardIndex) {
     });
 }
 
-// Renderizado del cuerpo del jugador y sus rivales
-export function renderBodyBoard (bodyKey, slotsHTML) {
-    if (!slotsHTML) return;
-
-    [slotsHTML.brain, slotsHTML.heart, slotsHTML.stomach, slotsHTML.bone, slotsHTML.nervous].forEach(slot => {
-        if (slot) slot.innerHTML = ''; 
-    });
-
-    const bodyCards = gameState[bodyKey] || [];
-
-    bodyCards.forEach(card => {
-        let organSlot;
-        const organDiv = document.createElement('div');
-
-        switch (card.name) {
-            case 'brain': organDiv.className = 'organ brain-card'; organSlot = slotsHTML.brain; break;
-            case 'heart': organDiv.className = 'organ heart-card'; organSlot = slotsHTML.heart; break;
-            case 'stomach': organDiv.className = 'organ stomach-card'; organSlot = slotsHTML.stomach; break;
-            case 'bone': organDiv.className = 'organ bone-card'; organSlot = slotsHTML.bone; break;
-            default: organDiv.className = 'organ nervous-card'; organSlot = slotsHTML.nervous; break;
-        }
-
-        if (organSlot) {
-            organDiv.style.backgroundImage = card.photo;
-            organDiv.style.backgroundSize = 'cover';
-            organDiv.style.width = '100%';
-            organDiv.style.height = '100%';
-            
-            // Atributos de metadatos listos para cuando lances virus
-            organDiv.dataset.propietario = bodyKey; 
-            organDiv.dataset.organo = card.name;
-
-            organSlot.appendChild(organDiv);
-        }
-    });
-
-    [slotsHTML.brain, slotsHTML.heart, slotsHTML.stomach, slotsHTML.bone, slotsHTML.nervous].forEach(slot => {
-        if (slot && slot.children.length === 0) {
-            slot.innerText = 'Vacío';
-        }
-    });
-}
-
-// FUNCIÓN PRINCIPAL DE INYECCIÓN VISUAL
+// Inyeccion visual
 export function renderBody() {
     // Dibuja el cuerpo local
     const myOrganSlots = {

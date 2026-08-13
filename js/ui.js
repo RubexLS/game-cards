@@ -1,13 +1,14 @@
-import { gameState, HAND_KEY, BODY_KEY, MAP_ROL, getStatus, GAME_ID } from './state.js';
+import { gameState, HAND_KEY, BODY_KEY, MAP_ROL, getStatus, GAME_ID, resetDrawPhase } from './state.js';
 import { firebaseMock, passTurn } from './firebaseMock.js';
-import { Cards, drawCardrawCard } from './game.js';
+import { Cards, drawCard, renderBody } from './game.js';
 
 // Elementos del DOM
 export const handTemp = document.getElementById('player-hand');
 const deckElement = document.getElementById('deck');
 const deckCountElement = document.getElementById('deck-count');
 const exileSlot = document.getElementById('exile-slot');
-const buttonElement = document.getElementById('turn');
+
+let lastTurnScored = null;
 
 export async function startGame() {    
     const gameData = await firebaseMock.getGame(GAME_ID);
@@ -75,14 +76,21 @@ export async function syncDataBase(gameData) {
         gameState[`player${color}`] = gameData[`player${color}`] || [];
         gameState[`body${color}`] = gameData[`body${color}`] || [];
     });
-        
-    if (getStatus()) {
-        passTurn();
+
+    const currentTurn = gameData.turn;
+
+    if (getStatus() && lastTurnScored !== currentTurn) {
+        passTurn(); // Solo se desbloquea el botón cuando es una ronda 100% nueva para ti
+        resetDrawPhase(); 
+    } else if (!getStatus()) {
+        resetDrawPhase(); 
     }
+
+    lastTurnScored = currentTurn;
 
     renderHand();
     renderBoard();
-    import('./game.js').then(m => m.renderBody()); // Import dinámico para evitar bloqueos
+    renderBody();
 }
 
 // Función para actualizar la interfaz visual de la mano
@@ -96,12 +104,8 @@ export function renderHand(keyword) {
 
     if (getStatus()) {
         handTemp.classList.remove('disabled');
-        buttonElement.disabled = false;
-        buttonElement.innerText = "Finalizar Turno";
     } else {
         handTemp.classList.add('disabled');
-        buttonElement.disabled = true;
-        buttonElement.innerText = "Turno del Rival";
     }
 }
 
@@ -167,25 +171,6 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
 
 // Detecta clicks en el mazo
 deckElement.addEventListener('click', drawCard);
-
-// cambio de turno
-buttonElement.addEventListener('click', async () => {
-    if (!getStatus()) return; // Por seguridad
-
-    const orderPlayers = ['playerOrange', 'playerBlue', 'playerRed', 'playerYellow', 'playerGreen'];
-    const playersInGame = orderPlayers.filter(player => gameState.activePlayers.includes(player));
-    
-    // índice del jugador actual
-    const currentIndex = playersInGame.indexOf(HAND_KEY);
-    
-    // Encuentra el siguiente índice (vuelve a 0 cuando llega al final del array)
-    const nextIndex = (currentIndex + 1) % playersInGame.length;
-    const nextPlayer = playersInGame[nextIndex];
-
-    await firebaseMock.updateGame(GAME_ID, {
-        turn: nextPlayer 
-    });
-});
 
 // solo para online
 // export function rolRecovery() {

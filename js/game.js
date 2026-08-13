@@ -1,6 +1,6 @@
-import { firebaseMock, buttonStatus, recordUsage } from './firebaseMock.js';
+import { firebaseMock, usedCardsTurn, recordUsage, passTurn } from './firebaseMock.js';
 import { renderBodyBoard, handTemp } from './ui.js';
-import { gameState, HAND_KEY, BODY_KEY, getStatus, GAME_ID } from './state.js';
+import { gameState, HAND_KEY, BODY_KEY, getStatus, GAME_ID, inDrawPhase, resetDrawPhase, startDrawPhase } from './state.js';
 
 const options = document.getElementById('options');
 const ALL_BODY = ['bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen'];
@@ -119,14 +119,17 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
         cardDiv.addEventListener('click', () => {
             options.innerHTML = '';
 
+            const enabled = !usedCardsTurn && !inDrawPhase;
+
             const optionUse = document.createElement('button');
             optionUse.className = 'option use';
-            optionUse.innerText = buttonStatus() ? '1 por turno' : 'Usar';
-            optionUse.disabled = buttonStatus();
+            optionUse.innerText = enabled ? 'Usar' : (inDrawPhase ? 'Fase de Robo' : '1 por turno');
+            optionUse.disabled = !enabled;
             
             const optionDiscard = document.createElement('button');
             optionDiscard.className = 'option discard';
             optionDiscard.innerText = 'Descartar';
+            optionDiscard.disabled = inDrawPhase;
             
             options.appendChild(optionUse);
             options.appendChild(optionDiscard);
@@ -138,13 +141,10 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
 
             optionUse.addEventListener('click', async () => {
                 // en caso de multiples clicks
-                if (buttonStatus()) return; 
-
-                // Bloquea el estado local del botón de forma inmediata
-                recordUsage();
+                if (!enabled) return; 
+                recordUsage(); // Bloquea la acción de "Usar" por el resto del turno
                 optionUse.disabled = true;
                 options.innerHTML = '';
-
                 await useCard(index);
             });
         });
@@ -156,48 +156,87 @@ export async function drawCard() {
     // Bloquear si no es mi turno
     if (!getStatus()) { alert("No es tu turno para robar."); return; }
     if (gameState.deck.length === 0) { alert("¡No quedan cartas!"); return; }
+
+    // Clon de los arrays para no mutar el estado local de forma intermitente
+    const tempDeck = [...gameState.deck];
+    const tempHand = [...gameState[HAND_KEY]];
     
-    const hand = gameState[HAND_KEY];
-    if (hand.length >= 3) { alert("Tu mano está llena."); return; }
+    if (tempHand.length >= 3) { alert("Tu mano está llena."); return; }
+    
+    // Al primer click en el mazo, se activa el candado: No más usar ni descartar
+    if (!inDrawPhase) {
+        startDrawPhase();
+    }
 
     // Modificacion de los datos temporalmente
-    const nextCard = gameState.deck.pop();
-    hand.push(nextCard);
+    const nextCard = tempDeck.pop();
+    tempHand.push(nextCard);
 
-    await firebaseMock.updateGame(GAME_ID, {
-        deck: gameState.deck, 
-        [HAND_KEY]: hand 
-    });
+    // paquete de actualización para Firebase
+    let updateData = {
+        deck: tempDeck,
+        [HAND_KEY]: tempHand
+    };
+
+    // secuencia de cambio de turno
+    if (tempHand.length === 3) {
+        resetDrawPhase(); // Limpiamos el candado local para su siguiente turno
+        passTurn(); 
+        
+        const orderPlayers = ['playerOrange', 'playerBlue', 'playerRed', 'playerYellow', 'playerGreen'];
+        const playersInGame = orderPlayers.filter(player => gameState.activePlayers.includes(player));
+        const currentIndex = playersInGame.indexOf(HAND_KEY);
+        const nextIndex = (currentIndex + 1) % playersInGame.length;
+        
+        options.innerHTML = '';
+        updateData.turn = playersInGame[nextIndex]; // Cambio de turno automáticamente en la nube
+    }
+
+    await firebaseMock.updateGame(GAME_ID, 
+        updateData
+    );
 }
 
 async function exileCard(cardIndex) {
-    let hand = gameState[HAND_KEY];
-    if (hand.length === 0) return;
+    if (!gameState[HAND_KEY] || gameState[HAND_KEY].length === 0) return;
+
+    // Clon de los arrays
+    const tempHand = [...gameState[HAND_KEY]];
+    const tempExile = [...gameState.exileZone];
 
     // Quita la carta del array local
-    const excludedCard = hand.splice(cardIndex, 1)[0];
-    gameState.exileZone.push(excludedCard.cardPhoto);
+    const excludedCard = tempHand.splice(cardIndex, 1)[0];
+    tempExile.push(excludedCard.cardPhoto);
+
+    renderHandPlayer(tempHand, handTemp);
 
     await firebaseMock.updateGame(GAME_ID, {
-        [handKey]: hand,
-        exileZone: gameState.exileZone
+        [HAND_KEY]: tempHand,
+        exileZone: tempExile
     });
 }
 
 async function useCard(cardIndex) {
-    let hand = gameState[HAND_KEY];
-    if (!hand || hand.length === 0) return;
-    
-    const organCard = hand.splice(cardIndex, 1)[0];
+    if (!gameState[HAND_KEY] || gameState[HAND_KEY].length === 0) return;
 
-    gameState[BODY_KEY].push({
+    recordUsage();
+
+    // Clona de los array
+    const tempHand = [...gameState[HAND_KEY]];
+    const tempBody = [...gameState[BODY_KEY]];
+    
+    const organCard = tempHand.splice(cardIndex, 1)[0];
+
+    tempBody.push({
         name: organCard.name,
         cardPhoto: organCard.cardPhoto
     });
 
+    renderHandPlayer(tempHand, handTemp);
+
     await firebaseMock.updateGame(GAME_ID, {
-        [HAND_KEY]: hand,
-        [BODY_KEY]: gameState[BODY_KEY]
+        [HAND_KEY]: tempHand,
+        [BODY_KEY]: tempBody
     });
 }
 
@@ -227,9 +266,9 @@ export function renderBody() {
 
     // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
     rotatedRivals.forEach((rivalKey, index) => {
-        const slotsDestino = slotsRivalsDOM[index];
-        if (slotsDestino) {
-            renderBodyBoard(rivalKey, slotsDestino);
+        const slotDestiny = slotsRivalsDOM[index];
+        if (slotDestiny) {
+            renderBodyBoard(rivalKey, slotDestiny);
         }
     });
 }

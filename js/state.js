@@ -36,3 +36,14 @@ export function assignPlayer(idButton) {
 export function getStatus() { 
     return gameState.status === HAND_KEY;
 }
+
+// Control del robo de cartas
+export let inDrawPhase = false;
+
+export function resetDrawPhase() {
+    inDrawPhase = false;
+}
+
+export function startDrawPhase() {
+    inDrawPhase = true;
+}

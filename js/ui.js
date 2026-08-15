@@ -158,6 +158,36 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
             // Atributos de metadatos listos para cuando lances virus
             organDiv.dataset.propietario = bodyKey; 
             organDiv.dataset.organo = card.name;
+
+            // inyeccion de contenedor de iconos (virus, vacunas, inmunidad)
+            const tokensContainer = document.createElement('div');
+            tokensContainer.className = 'organ-tokens';
+
+            // asegurar la existencia de los arrays de medicinas y virus
+            const currentViruses = card.viruses || [];
+            const currentMedicines = card.medicines || [];
+
+            // Renderizar el icono de Virus
+            currentViruses.forEach(virus => {
+                const virusToken = document.createElement('div');
+                virusToken.className = `token virus-token ${virus.color}`;
+                tokensContainer.appendChild(virusToken);
+            });
+
+            // Renderiza el icono de Medicina
+            currentMedicines.forEach(medicine => {
+                const medToken = document.createElement('div');
+                medToken.className = `token medicine-token ${medicine.color}`;
+                tokensContainer.appendChild(medToken);
+            });
+
+            // Si tiene 2 vacunas o más, añade la clase de inmunidad al órgano
+            if (currentMedicines.length >= 2) {
+                organDiv.classList.add('is-immune');
+            }
+
+            // Metemos los iconos dentro del órgano antes de agregarlo al slot
+            organDiv.appendChild(tokensContainer);
             organSlot.appendChild(organDiv);
         }
     });

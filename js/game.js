@@ -42,6 +42,8 @@ const slotsRivalsDOM = [
     }
 ];
 
+let activeTargetingCard = null;
+
 export class Cards {
     static typeCards = [];
     static deck = [];
@@ -76,6 +78,8 @@ export class Cards {
         }
     }
 }
+
+Cards.typeCards = []; 
 
 let bone = new Cards('bone', '/assets/cards/bone.png', 5, 'organ', 'yellow');
 let brain = new Cards('brain', '/assets/cards/brain.png', 5, 'organ', 'blue');
@@ -219,25 +223,42 @@ async function exileCard(cardIndex) {
 async function useCard(cardIndex) {
     if (!gameState[HAND_KEY] || gameState[HAND_KEY].length === 0) return;
 
-    recordUsage();
+    const selectedCard = gameState[HAND_KEY][cardIndex];
 
-    // Clona de los array
-    const tempHand = [...gameState[HAND_KEY]];
-    const tempBody = [...gameState[BODY_KEY]];
+    // valida organos duplicados
+    if (selectedCard.type === 'organ') {
+        const tempBody = [...gameState[BODY_KEY]];
+        const hasDuplicate = tempBody.some(organ => organ.name === selectedCard.name);
+        
+        if (hasDuplicate) {
+            alert(`¡Ya tienes un ${selectedCard.name} en tu cuerpo! No puedes duplicarlo.`);
+            return; // Bloquea la ejecución y mantiene la carta en la mano
+        }
     
-    const organCard = tempHand.splice(cardIndex, 1)[0];
+        recordUsage();
 
-    tempBody.push({
-        name: organCard.name,
-        cardPhoto: organCard.cardPhoto
-    });
+        const tempHand = [...gameState[HAND_KEY]];    
+        const organCard = tempHand.splice(cardIndex, 1)[0];
 
-    renderHandPlayer(tempHand, handTemp);
+        tempBody.push({
+            name: organCard.name,
+            cardPhoto: organCard.cardPhoto
+        });
 
-    await firebaseMock.updateGame(GAME_ID, {
-        [HAND_KEY]: tempHand,
-        [BODY_KEY]: tempBody
-    });
+        renderHandPlayer(tempHand, handTemp);
+
+        await firebaseMock.updateGame(GAME_ID, {
+            [HAND_KEY]: tempHand,
+            [BODY_KEY]: tempBody
+        });
+    }else if(selectedCard.type === 'virus'){
+        // Guarda la carta seleccionada y su posición en la mano
+        activeTargetingCard = { ...selectedCard, index: cardIndex };
+        
+        // Cambio de cursor para dar feedback visual al usuario
+        document.body.style.cursor = 'crosshair'; 
+        alert(`Has seleccionado ${selectedCard.name}. Haz clic en el órgano que deseas infectar.`); // mensaje temporal para verificar compilacion
+    }
 }
 
 // Inyeccion visual
@@ -255,14 +276,24 @@ export function renderBody() {
     // Rota y dibuja los cuerpos de los rivales
     if (!BODY_KEY) return;
 
+    //Filtra los cuerpos de jugadores que están actualmente en partida
+    const activeBodies = gameState.activePlayers.map(playerKey => 
+        playerKey.replace('player', 'body')
+    );
+
     // Buscamos en qué posición del array global esta ubicado
-    const indexLocation = ALL_BODY.indexOf(BODY_KEY);
+    const indexLocation = activeBodies.indexOf(BODY_KEY);
 
     // Corte y reordenamiento del array 
     const rotatedRivals = [
-        ...ALL_BODY.slice(indexLocation + 1),
-        ...ALL_BODY.slice(0, indexLocation)
+        ...activeBodies.slice(indexLocation + 1),
+        ...activeBodies.slice(0, indexLocation)
     ];
+
+    // Limpia todos los contenedores del DOM de rivales por seguridad (evita fantasmas de partidas anteriores)
+    slotsRivalsDOM.forEach(slot => {
+        Object.values(slot).forEach(div => { if (div) div.innerHTML = 'Vacío'; });
+    });
 
     // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
     rotatedRivals.forEach((rivalKey, index) => {
@@ -272,3 +303,96 @@ export function renderBody() {
         }
     });
 }
+
+// Escuchamos los clics en todo el documento para atrapar los clics en los órganos
+document.addEventListener('click', async (event) => {
+    if (!activeTargetingCard) return;
+
+    // Deteccion de click en elementos con la clase 'organ'
+    const organTarget = event.target.closest('.organ');
+    if (!organTarget) return; 
+
+    // información del órgano a traves de los datasets de renderBodyBoard
+    const targetBodyKey = organTarget.dataset.propietario;
+    const targetOrganName = organTarget.dataset.organo;
+
+    // datos del cuerpo afectado desde el estado global
+    const targetBody = [...gameState[targetBodyKey]];
+    
+    // Encontrar el objeto exacto del órgano dentro del cuerpo
+    const organInBody = targetBody.find(o => o.name === targetOrganName);
+    if (!organInBody) return;
+
+    const colorMap = { 'bone': 'yellow', 'brain': 'blue', 'heart': 'red', 'stomach': 'green', 'nervousSystem': 'rainbow' };
+    const targetColor = colorMap[targetOrganName];
+
+    const isRainbowVirus = activeTargetingCard.color === 'rainbow';
+    const isRainbowOrgan = targetOrganName === 'nervousSystem';
+    const colorsMatch = activeTargetingCard.name.includes(targetOrganName); 
+
+    if (!isRainbowVirus && !isRainbowOrgan && activeTargetingCard.color !== targetColor) {
+        alert("¡No puedes infectar ese órgano! Los colores no coinciden.");
+        return;
+    }
+
+    // Inicia array de virus y medicinas del organo si no existe
+    if (!organInBody.viruses) organInBody.viruses = [];
+    if (!organInBody.medicines) organInBody.medicines = [];
+
+    // comprueba inmunidad
+    if (organInBody.medicines.length >= 2) {
+        alert("¡Este órgano es inmune! Tiene dos vacunas y no puede recibir virus.");
+        return;
+    }
+
+    // Clon de la zona de exilio para mandar las cartas destruidas si aplica
+    const tempExile = [...gameState.exileZone];
+    
+    if (organInBody.medicines.length > 0) { // si el organo tiene una medicina
+        alert("¡El virus ha destruido la medicina protectora del órgano!"); // mensaje temporal
+        
+        const destroyedMedicine = organInBody.medicines.pop();
+
+        tempExile.push(destroyedMedicine.cardPhoto);
+        tempExile.push(activeTargetingCard.cardPhoto);
+
+    } else {
+        if (organInBody.viruses.length === 1) { // si el organo ya tiene un virus lo destruye
+            alert("¡Segundo virus! El órgano ha sido completamente destruido y se va al exilio."); // mensaje temporal
+            
+            tempExile.push(organInBody.cardPhoto);
+            organInBody.viruses.forEach(v => tempExile.push(v.cardPhoto));
+            tempExile.push(activeTargetingCard.cardPhoto);
+
+            const organIndex = targetBody.findIndex(o => o.name === targetOrganName);
+            targetBody.splice(organIndex, 1);
+
+        } else { // Si estaba sano (0 virus), simplemente agrega el virus (aparecera el icono)
+            alert("¡Órgano infectado correctamente!");
+            
+            organInBody.viruses.push({
+                name: activeTargetingCard.name,
+                cardPhoto: activeTargetingCard.cardPhoto,
+                color: activeTargetingCard.color
+            });
+        }
+    }
+
+    recordUsage(); // Candado en un solo uso por dia
+
+    // Remueve el virus de la mano del jugador
+    const tempHand = [...gameState[HAND_KEY]];
+    tempHand.splice(activeTargetingCard.index, 1); //[0]
+
+    // Limpiar el modo objetivo
+    activeTargetingCard = null;
+    document.body.style.cursor = 'default';
+
+    await firebaseMock.updateGame(GAME_ID, {
+        [HAND_KEY]: tempHand,
+        [targetBodyKey]: targetBody,
+        exileZone: tempExile
+    });
+
+    alert("¡Órgano infectado con éxito!");
+});

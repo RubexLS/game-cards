@@ -258,6 +258,13 @@ async function useCard(cardIndex) {
         // Cambio de cursor para dar feedback visual al usuario
         document.body.style.cursor = 'crosshair'; 
         alert(`Has seleccionado ${selectedCard.name}. Haz clic en el órgano que deseas infectar.`); // mensaje temporal para verificar compilacion
+    } else if (selectedCard.type === 'medicine'){
+        // Guarda la carta seleccionada y su posición en la mano
+        activeTargetingCard = { ...selectedCard, index: cardIndex };
+        
+        // Cambio de cursor para dar feedback visual al usuario
+        document.querySelector('.bodyGame').style.cursor = 'crosshair'; 
+        alert(`Has seleccionado ${selectedCard.name}. Haz clic en el órgano que deseas vacunar.`); // mensaje temporal para verificar compilacion
     }
 }
 
@@ -315,7 +322,6 @@ document.addEventListener('click', async (event) => {
     // información del órgano a traves de los datasets de renderBodyBoard
     const targetBodyKey = organTarget.dataset.propietario;
     const targetOrganName = organTarget.dataset.organo;
-
     // datos del cuerpo afectado desde el estado global
     const targetBody = [...gameState[targetBodyKey]];
     
@@ -323,54 +329,87 @@ document.addEventListener('click', async (event) => {
     const organInBody = targetBody.find(o => o.name === targetOrganName);
     if (!organInBody) return;
 
+    // --- funcion auxiliar para cancelar la jugada sin perder la carta ni turno ---
+    const cancelarJugada = (mensaje) => {
+        alert(mensaje);
+        activeTargetingCard = null;
+        document.body.style.cursor = 'default';
+        const bodyGameElem = document.querySelector('.bodyGame');
+        if (bodyGameElem) bodyGameElem.style.cursor = 'default';
+    };
+
     const colorMap = { 'bone': 'yellow', 'brain': 'blue', 'heart': 'red', 'stomach': 'green', 'nervousSystem': 'rainbow' };
     const targetColor = colorMap[targetOrganName];
 
     const isRainbowVirus = activeTargetingCard.color === 'rainbow';
     const isRainbowOrgan = targetOrganName === 'nervousSystem';
-    const colorsMatch = activeTargetingCard.name.includes(targetOrganName); 
+    // const colorsMatch = activeTargetingCard.name.includes(targetOrganName); 
+    // Comparamos directamente las propiedades .color de la carta y del mapa
+    const colorsMatch = activeTargetingCard.color === targetColor; 
 
-    if (!isRainbowVirus && !isRainbowOrgan && activeTargetingCard.color !== targetColor) {
-        alert("¡No puedes infectar ese órgano! Los colores no coinciden.");
+    if (!isRainbowVirus && !isRainbowOrgan && !colorsMatch) {
+        cancelarJugada("¡No puedes aplicar esta carta en ese órgano! Los colores no coinciden.");
         return;
     }
 
     // Inicia array de virus y medicinas del organo si no existe
     if (!organInBody.viruses) organInBody.viruses = [];
     if (!organInBody.medicines) organInBody.medicines = [];
-
-    // comprueba inmunidad
-    if (organInBody.medicines.length >= 2) {
-        alert("¡Este órgano es inmune! Tiene dos vacunas y no puede recibir virus.");
-        return;
-    }
-
     // Clon de la zona de exilio para mandar las cartas destruidas si aplica
     const tempExile = [...gameState.exileZone];
-    
-    if (organInBody.medicines.length > 0) { // si el organo tiene una medicina
-        alert("¡El virus ha destruido la medicina protectora del órgano!"); // mensaje temporal
+
+    if (activeTargetingCard.type === 'virus') {
+        if (organInBody.medicines.length >= 2) {
+            cancelarJugada("¡Este órgano es inmune! Tiene dos vacunas y no puede recibir virus.");
+            return;
+        }
+    } else if (activeTargetingCard.type === 'medicine') {
+        if (organInBody.medicines.length >= 2) {
+            cancelarJugada("¡Este órgano ya es inmune, no necesita más vacunas!");
+            return;
+        }
+    }
+
+    if(activeTargetingCard.type === 'virus') {
+
+        if (organInBody.medicines.length > 0) { // si el organo tiene una medicina
+            alert("¡El virus ha destruido la medicina protectora del órgano!"); // mensaje temporal
         
-        const destroyedMedicine = organInBody.medicines.pop();
+            const destroyedMedicine = organInBody.medicines.pop();
 
-        tempExile.push(destroyedMedicine.cardPhoto);
-        tempExile.push(activeTargetingCard.cardPhoto);
-
-    } else {
-        if (organInBody.viruses.length === 1) { // si el organo ya tiene un virus lo destruye
-            alert("¡Segundo virus! El órgano ha sido completamente destruido y se va al exilio."); // mensaje temporal
-            
-            tempExile.push(organInBody.cardPhoto);
-            organInBody.viruses.forEach(v => tempExile.push(v.cardPhoto));
+            tempExile.push(destroyedMedicine.cardPhoto);
             tempExile.push(activeTargetingCard.cardPhoto);
 
-            const organIndex = targetBody.findIndex(o => o.name === targetOrganName);
-            targetBody.splice(organIndex, 1);
-
-        } else { // Si estaba sano (0 virus), simplemente agrega el virus (aparecera el icono)
-            alert("¡Órgano infectado correctamente!");
+        } else {
+            if (organInBody.viruses.length === 1) { // si el organo ya tiene un virus lo destruye
+                alert("¡Segundo virus! El órgano ha sido completamente destruido y se va al exilio."); // mensaje temporal
             
-            organInBody.viruses.push({
+                tempExile.push(organInBody.cardPhoto);
+                organInBody.viruses.forEach(v => tempExile.push(v.cardPhoto));
+                tempExile.push(activeTargetingCard.cardPhoto);
+
+                const organIndex = targetBody.findIndex(o => o.name === targetOrganName);
+                targetBody.splice(organIndex, 1);
+
+            } else { // Si estaba sano (0 virus), simplemente agrega el virus (aparecera el icono)
+                alert("¡Órgano infectado correctamente!");
+            
+                organInBody.viruses.push({
+                    name: activeTargetingCard.name,
+                    cardPhoto: activeTargetingCard.cardPhoto,
+                    color: activeTargetingCard.color
+                });
+            }
+        }
+    } else if (activeTargetingCard.type === 'medicine') {
+        if (organInBody.viruses.length > 0) {
+            alert("¡La medicina ha curado y destruido el virus del órgano!");
+            const curedVirus = organInBody.viruses.pop();
+            tempExile.push(curedVirus.cardPhoto);
+            tempExile.push(activeTargetingCard.cardPhoto);
+        } else {
+            alert("¡Órgano vacunado correctamente!");
+            organInBody.medicines.push({
                 name: activeTargetingCard.name,
                 cardPhoto: activeTargetingCard.cardPhoto,
                 color: activeTargetingCard.color
@@ -387,6 +426,8 @@ document.addEventListener('click', async (event) => {
     // Limpiar el modo objetivo
     activeTargetingCard = null;
     document.body.style.cursor = 'default';
+    const bodyGameElem = document.querySelector('.bodyGame');
+    if (bodyGameElem) bodyGameElem.style.cursor = 'default';
 
     await firebaseMock.updateGame(GAME_ID, {
         [HAND_KEY]: tempHand,
@@ -394,5 +435,5 @@ document.addEventListener('click', async (event) => {
         exileZone: tempExile
     });
 
-    alert("¡Órgano infectado con éxito!");
+    alert("¡Órgano completada con éxito!");
 });

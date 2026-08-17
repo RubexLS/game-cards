@@ -2,6 +2,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 body {
@@ -38,7 +39,7 @@ main {
     grid-template-rows: repeat(2, 1fr);
     gap: 5px;
     width: 100%;
-    height: 600px;
+    height: 100%;
 }
 
 .game-container {
@@ -122,6 +123,7 @@ main {
     background-color: #34495e;
     padding: 15px;
     border-radius: 10px;
+    width: 100%;
 }
 
 .hand .card {
@@ -143,11 +145,12 @@ main {
     display: flex;
     justify-content: center;
     align-items: flex-start; /* Alinea las bases de las cartas */
-    height: 250px;
+    height: 100%;
+    width: 100%;
     background-color: #34495e;
 }
 
-.left-card .medium-card .right-card {
+.left-card, .medium-card, .right-card {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     border: 2px solid #ccc;
     transition: transform 0.2s ease; /* Suaviza el efecto al pasar el mouse */
@@ -232,37 +235,95 @@ main {
 
     width: 100%;
     height: 100%;
-    min-height: 120px; /* Ajusta este valor al alto deseado para las celdas si se usa CSS Grid */
+    aspect-ratio: 6 / 5;
+    /*min-height: 120px; /* Ajusta este valor al alto deseado para las celdas si se usa CSS Grid */
     overflow: hidden;  /* Evita que cualquier cosa se salga del recuadro rojo */
     box-sizing: border-box;
 }
 
-#brain-slot, #brain-slot-rivalOne, #brain-slot-rivalTwo, #brain-slot-rivalThree, #brain-slot-rivalFour{
+#brain-slot{
     grid-column: 1 / 2;
     grid-row: 1 / 2;
-    background-color: #e74c3c;
+    background-image: url(../assets/board/brain_slot.png);
 }
 
-#heart-slot, #heart-slot-rivalOne, #heart-slot-rivalTwo, #heart-slot-rivalThree, #heart-slot-rivalFour{
+#heart-slot{
     grid-column: 2 / 3;
     grid-row: 1 / 2;
-    background-color: #e74c3c;
+    background-image: url(../assets/board/heart_slot.png);
 }
-#stomach-slot, #stomach-slot-rivalOne, #stomach-slot-rivalTwo, #stomach-slot-rivalThree, #stomach-slot-rivalFour{
+
+#stomach-slot{
     grid-column: 1 / 2;
     grid-row: 2 / 3;
-    background-color: #e74c3c;
+    background-image: url(../assets/board/stomach_slot.png);
 }
-#bone-slot, #bone-slot-rivalOne, #bone-slot-rivalTwo, #bone-slot-rivalThree, #bone-slot-rivalFour{
+#bone-slot{
     grid-column: 2 / 3;
     grid-row: 2 / 3;
-    background-color: #e74c3c;
+    background-image: url(../assets/board/bone_slot.png);
 }
-#nervous-slot, #nervous-slot-rivalOne, #nervous-slot-rivalTwo, #nervous-slot-rivalThree, #nervous-slot-rivalFour{
+#nervous-slot{
     grid-column: 1 / 2;
     grid-row: 3 / 4;
-    background-color: #e74c3c; /* Color rojo para el sistema nervioso */
+    background-image: url(../assets/board/nervous_system.png);
 }
+
+#brain-slot,
+#heart-slot,
+#stomach-slot,
+#bone-slot,
+#nervous-slot{
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+}
+
+
+#brain-slot-rivalOne, #brain-slot-rivalTwo, #brain-slot-rivalThree, #brain-slot-rivalFour{
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    background-image: url(../assets/board/brain_slot_rival.png);
+}
+
+#heart-slot-rivalOne, #heart-slot-rivalTwo, #heart-slot-rivalThree, #heart-slot-rivalFour{
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    background-image: url(../assets/board/heart_slot_rival.png);
+}
+#stomach-slot-rivalOne, #stomach-slot-rivalTwo, #stomach-slot-rivalThree, #stomach-slot-rivalFour{
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    background-image: url(../assets/board/stomach_slot_rival.png);
+}
+#bone-slot-rivalOne, #bone-slot-rivalTwo, #bone-slot-rivalThree, #bone-slot-rivalFour{
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    background-image: url(../assets/board/bone_slot_rival.png);
+}
+#nervous-slot-rivalOne, #nervous-slot-rivalTwo, #nervous-slot-rivalThree, #nervous-slot-rivalFour{
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+    background-image: url(../assets/board/nervous_system_rival.png);
+}
+
+#brain-slot-rivalOne, #brain-slot-rivalTwo, #brain-slot-rivalThree, #brain-slot-rivalFour,
+#heart-slot-rivalOne, #heart-slot-rivalTwo, #heart-slot-rivalThree, #heart-slot-rivalFour,
+#stomach-slot-rivalOne, #stomach-slot-rivalTwo, #stomach-slot-rivalThree, #stomach-slot-rivalFour,
+#bone-slot-rivalOne, #bone-slot-rivalTwo, #bone-slot-rivalThree, #bone-slot-rivalFour,
+#nervous-slot-rivalOne, #nervous-slot-rivalTwo, #nervous-slot-rivalThree, #nervous-slot-rivalFour{
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+}
+
+
 
 /*-------------------------botones de uso de cartas-------------------------------*/
 
@@ -296,6 +357,7 @@ main {
     background-color: #1e0ece;
     width: 100%;
     height: 100%;
+    opacity: 0.3;
 }
 
 .rivalTwo{
@@ -304,6 +366,7 @@ main {
     background-color: #e74c3c;
     width: 100%;
     height: 100%;
+    opacity: 0.3;
 }
 
 .rivalThree{
@@ -312,6 +375,7 @@ main {
     background-color: #cee80c;
     width: 100%;
     height: 100%;
+    opacity: 0.3;
 }
 
 .rivalFour{
@@ -320,6 +384,7 @@ main {
     background-color: #07ea0b;
     width: 100%;
     height: 100%;
+    opacity: 0.3;
 }
 
 /* estilos para los virus */
@@ -354,18 +419,6 @@ main {
 .token.virus-token.rainbow {
     background-image: url("../assets/icons/virus_icon.png");
 }
-/* .token.virus-token.blue {
-    background-image: url("../assets/icons/virus_icon.png");
-}
-.token.virus-token.red {
-    background-image: url("../assets/icons/virus_icon.png");
-}
-.token.virus-token.green {
-    background-image: url("../assets/icons/virus_icon.png");
-}
-.token.virus-token.rainbow {
-    background-image: url("../assets/icons/virus_icon.png");
-} */
 
 .token.medicine-token.yellow,
 .token.medicine-token.blue,

@@ -232,10 +232,9 @@ async function useCard(cardIndex) {
         
         if (hasDuplicate) {
             alert(`¡Ya tienes un ${selectedCard.name} en tu cuerpo! No puedes duplicarlo.`);
-            return; // Bloquea la ejecución y mantiene la carta en la mano
+            passTurn(); 
+            return; 
         }
-    
-        recordUsage();
 
         const tempHand = [...gameState[HAND_KEY]];    
         const organCard = tempHand.splice(cardIndex, 1)[0];
@@ -263,7 +262,8 @@ async function useCard(cardIndex) {
         activeTargetingCard = { ...selectedCard, index: cardIndex };
         
         // Cambio de cursor para dar feedback visual al usuario
-        document.querySelector('.bodyGame').style.cursor = 'crosshair'; 
+        const bodyGameElem = document.querySelector('.bodyGame');
+        if (bodyGameElem) bodyGameElem.style.cursor = 'crosshair'; 
         alert(`Has seleccionado ${selectedCard.name}. Haz clic en el órgano que deseas vacunar.`); // mensaje temporal para verificar compilacion
     }
 }
@@ -323,7 +323,8 @@ document.addEventListener('click', async (event) => {
     const targetBodyKey = organTarget.dataset.propietario;
     const targetOrganName = organTarget.dataset.organo;
     // datos del cuerpo afectado desde el estado global
-    const targetBody = [...gameState[targetBodyKey]];
+    if (!gameState[targetBodyKey]) return;
+    const targetBody = JSON.parse(JSON.stringify(gameState[targetBodyKey]));
     
     // Encontrar el objeto exacto del órgano dentro del cuerpo
     const organInBody = targetBody.find(o => o.name === targetOrganName);
@@ -336,6 +337,9 @@ document.addEventListener('click', async (event) => {
         document.body.style.cursor = 'default';
         const bodyGameElem = document.querySelector('.bodyGame');
         if (bodyGameElem) bodyGameElem.style.cursor = 'default';
+
+        import('./firebaseMock.js').then(m => m.passTurn());
+        import('./ui.js').then(ui => ui.renderHand());
     };
 
     const colorMap = { 'bone': 'yellow', 'brain': 'blue', 'heart': 'red', 'stomach': 'green', 'nervousSystem': 'rainbow' };
@@ -356,7 +360,7 @@ document.addEventListener('click', async (event) => {
     if (!organInBody.viruses) organInBody.viruses = [];
     if (!organInBody.medicines) organInBody.medicines = [];
     // Clon de la zona de exilio para mandar las cartas destruidas si aplica
-    const tempExile = [...gameState.exileZone];
+    const tempExile = JSON.parse(JSON.stringify(gameState.exileZone || []));
 
     if (activeTargetingCard.type === 'virus') {
         if (organInBody.medicines.length >= 2) {
@@ -417,11 +421,32 @@ document.addEventListener('click', async (event) => {
         }
     }
 
-    recordUsage(); // Candado en un solo uso por dia
-
     // Remueve el virus de la mano del jugador
-    const tempHand = [...gameState[HAND_KEY]];
-    tempHand.splice(activeTargetingCard.index, 1); //[0]
+    const tempHand = JSON.parse(JSON.stringify(gameState[HAND_KEY] || []));
+
+    // Verificación de seguridad: confirmamos que la carta sigue ahí antes de removerla
+    if (tempHand[activeTargetingCard.index] && tempHand[activeTargetingCard.index].name === activeTargetingCard.name) {
+        tempHand.splice(activeTargetingCard.index, 1);
+    } else {
+        // Si el índice cambió por lag, busca su nueva posición exacta
+        const realIndex = tempHand.findIndex(c => c.name === activeTargetingCard.name);
+
+        if (realIndex !== -1) {
+            tempHand.splice(realIndex, 1);
+        } else {
+            // Si la carta ya no existe en la mano (fue descartada por otro efecto),
+            // cancelamos la operación para evitar corromper la base de datos.
+            console.error("Error crítico: La carta ya no se encuentra en tu mano.");
+            activeTargetingCard = null;
+            document.body.style.cursor = 'default';
+            const bodyGameElem = document.querySelector('.bodyGame');
+            if (bodyGameElem) bodyGameElem.style.cursor = 'default';
+            
+            import('./firebaseMock.js').then(m => m.passTurn());
+            return; 
+        }
+        if (realIndex !== -1) tempHand.splice(realIndex, 1);
+    }
 
     // Limpiar el modo objetivo
     activeTargetingCard = null;

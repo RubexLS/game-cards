@@ -151,7 +151,7 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
 
         if (organSlot) {
             organDiv.style.backgroundImage = `url('${card.cardPhoto}')`;
-            organDiv.style.backgroundSize = 'cover';
+            organDiv.style.backgroundSize = '100% 100%';
             organDiv.style.width = '100%';
             organDiv.style.height = '100%';
             

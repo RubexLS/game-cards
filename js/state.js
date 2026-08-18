@@ -47,3 +47,20 @@ export function resetDrawPhase() {
 export function startDrawPhase() {
     inDrawPhase = true;
 }
+
+// Verifica si un cuerpo específico ha ganado (4 órganos diferentes y sanos)
+export function checkBodyVictory(bodyCards) {
+
+    if (!bodyCards || !Array.isArray(bodyCards) || bodyCards.length < 4) return false;
+    
+    // Filtra estrictamente los órganos que existen y que NO tienen virus activos
+    const healthyOrgans = bodyCards.filter(organ => organ && (!organ.viruses || organ.viruses.length === 0));
+    
+    // Filtra nombres válidos para evitar que un 'undefined' cuente como punto
+    const validNames = healthyOrgans.map(organ => organ.name).filter(name => name !== undefined && name !== null);
+    
+    const uniqueHealthyNames = new Set(validNames);
+    
+    // Si hay 4 o más órganos termina el juego
+    return uniqueHealthyNames.size >= 4;
+}

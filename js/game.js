@@ -1,6 +1,6 @@
 import { firebaseMock, usedCardsTurn, recordUsage, passTurn } from './firebaseMock.js';
 import { renderBodyBoard, handTemp } from './ui.js';
-import { gameState, HAND_KEY, BODY_KEY, getStatus, GAME_ID, inDrawPhase, resetDrawPhase, startDrawPhase } from './state.js';
+import { gameState, HAND_KEY, BODY_KEY, getStatus, GAME_ID, inDrawPhase, resetDrawPhase, startDrawPhase, checkBodyVictory  } from './state.js';
 
 const options = document.getElementById('options');
 const ALL_BODY = ['bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen'];
@@ -241,15 +241,28 @@ async function useCard(cardIndex) {
 
         tempBody.push({
             name: organCard.name,
-            cardPhoto: organCard.cardPhoto
+            cardPhoto: organCard.cardPhoto,
+            viruses: [],
+            medicines: []
         });
 
         renderHandPlayer(tempHand, handTemp);
 
-        await firebaseMock.updateGame(GAME_ID, {
+        const hasWon = checkBodyVictory(tempBody);
+
+        const updateData = {
             [HAND_KEY]: tempHand,
             [BODY_KEY]: tempBody
-        });
+        };
+
+        if (hasWon) {
+            updateData.state = "finalizado";
+            updateData.winner = HAND_KEY;
+        }
+
+        // Subida única y sólida a Firebase
+        await firebaseMock.updateGame(GAME_ID, updateData);
+
     }else if(selectedCard.type === 'virus'){
         // Guarda la carta seleccionada y su posición en la mano
         activeTargetingCard = { ...selectedCard, index: cardIndex };
@@ -445,7 +458,6 @@ document.addEventListener('click', async (event) => {
             import('./firebaseMock.js').then(m => m.passTurn());
             return; 
         }
-        if (realIndex !== -1) tempHand.splice(realIndex, 1);
     }
 
     // Limpiar el modo objetivo
@@ -454,11 +466,24 @@ document.addEventListener('click', async (event) => {
     const bodyGameElem = document.querySelector('.bodyGame');
     if (bodyGameElem) bodyGameElem.style.cursor = 'default';
 
-    await firebaseMock.updateGame(GAME_ID, {
+    renderHandPlayer(tempHand, handTemp);
+
+    const hasWon = checkBodyVictory(targetBody);
+    
+    const updateData = {
         [HAND_KEY]: tempHand,
         [targetBodyKey]: targetBody,
         exileZone: tempExile
-    });
+    };
 
-    alert("¡Órgano completada con éxito!");
+    // Si la acción completó la victoria (por ejemplo sanando el 4to órgano), cierra el juego en el mismo paquete
+    if (hasWon) {
+        updateData.state = "finalizado";
+        updateData.winner = targetBodyKey;
+    }
+
+    // Guardado síncrono e irreversible en Firebase
+    await firebaseMock.updateGame(GAME_ID, updateData);
+    
+    console.log("¡Firebase actualizado correctamente con los cambios de la jugada!");
 });

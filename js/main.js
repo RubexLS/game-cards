@@ -45,6 +45,11 @@ firebaseMock.listenMatch(GAME_ID, (gameData) => {
     //     return; 
     // }
 
+    if (gameData.state === "finalizado") {
+        syncDataBase(gameData);
+        return; // Rompe el flujo, evitando ejecutar codigo de otros botonoes
+    }
+
     const notAvailable = gameData.unavailablePlayers || [];
 
     // el host sera el primero en la lista y sera el unico que puede iniciar el juego
@@ -65,6 +70,14 @@ firebaseMock.listenMatch(GAME_ID, (gameData) => {
 
         syncDataBase(gameData);
         return; 
+    }
+
+    // regresa al menu y el estado cambio a "esperando"
+    if (gameData.state === "esperando" && gameStarted) {
+        gameStarted = false; // Permitir futuras transiciones
+        screenMenu.style.display = 'block';
+        screenGame.style.display = 'none';
+        // update a futuro: limpiar selecciones previas para obligar a re-elegir personaje,
     }
 
     buttons.forEach(button => {

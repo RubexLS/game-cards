@@ -85,6 +85,53 @@ export async function syncDataBase(gameData) {
     } else if (!getStatus()) {
         resetDrawPhase(); 
     }
+    
+    if (gameData.state === "finalizado") {
+        options.innerHTML = ''; // Limpia botones de usar/descartar
+        handTemp.classList.add('disabled'); // Congela la mano****************
+        
+        // Traduce el nombre técnico del ganador a algo legible
+        const winnerName = gameData.winner ? gameData.winner.replace('player', 'Jugador ').replace('body', 'Jugador ') : 'Alguien';
+        
+        const oldBanner = document.getElementById('victory-banner');
+        if (oldBanner) oldBanner.remove();
+
+        // Evita alertas infinitas 
+        if (!document.getElementById('victory-banner')) {
+            const banner = document.createElement('div');
+            banner.id = 'victory-banner';
+            banner.style = "position:fixed; top:20%; left:50%; transform:translate(-50%, -50%); background:gold; color:black; padding:20px; font-size:24px; font-weight:bold; border-radius:10px; z-index:999; text-align:center;";
+            banner.innerHTML = `🏆 ¡${winnerName} ha ganado la partida! 🏆`;
+            
+            // Si eres el Host (el creador de la sala), te genera el botón de reinicio
+            const lobby = gameData.unavailablePlayers || [];
+            if (lobby.length > 0 && MAP_ROL[lobby[0]].mano === HAND_KEY) {
+                const btnReset = document.createElement('button');
+                btnReset.innerText = "Iniciar Nueva Partida";
+                btnReset.style = "display:block; margin:15px auto 0; padding:10px; cursor:pointer;";
+                btnReset.addEventListener('click', async () => {
+                    await resetWholeGame();
+                });
+                banner.appendChild(btnReset);
+            } else {
+                const textWait = document.createElement('p');
+                textWait.innerText = "Esperando que el Host reinicie la partida...";
+                textWait.style = "font-size: 14px; margin-top: 10px; font-weight: normal;";
+                banner.appendChild(textWait);
+            }
+            document.body.appendChild(banner);
+        }
+        
+        // Renderizamos el estado final por última vez y salimos
+        renderHand();
+        renderBoard();
+        renderBody();
+        return; 
+    } else {
+        // Si el juego NO está finalizado, nos aseguramos de remover el banner si existía de una partida anterior
+        const oldBanner = document.getElementById('victory-banner');
+        if (oldBanner) oldBanner.remove();
+    }
 
     lastTurnScored = currentTurn;
 
@@ -214,3 +261,26 @@ deckElement.addEventListener('click', drawCard);
 //     }
 //     return null;
 // }
+
+// limpia Firebase por completo manteniendo los mismos jugadores de la sala
+async function resetWholeGame() {
+    const gameData = await firebaseMock.getGame(GAME_ID);
+    if (!gameData) return;
+
+    let dataReset = {
+        state: "esperando", // Regresa al menú/sala de espera
+        turn: gameData.unavailablePlayers[0] ? MAP_ROL[gameData.unavailablePlayers[0]].mano : "playerOrange",
+        deck: [],
+        exileZone: [],
+        discardZone: [],
+        winner: null
+    };
+
+    // Limpiamos las manos y cuerpos de todos los colores
+    ['Orange', 'Blue', 'Red', 'Yellow', 'Green'].forEach(color => {
+        dataReset[`player${color}`] = [];
+        dataReset[`body${color}`] = [];
+    });
+
+    await firebaseMock.updateGame(GAME_ID, dataReset);
+}

@@ -2,13 +2,15 @@ export const GAME_ID = 'game_001';
 
 // objeto exportado para mantener la referencia online
 export let gameState = {
-    deck: [],
-    exileZone: [],
-    status: true,
+    deck: [], 
+    exileZone: [], 
+    turn: "playerOrange", 
     activePlayers: [],
     playerOrange: [], playerBlue: [], playerRed: [], playerYellow: [], playerGreen: [],
     bodyOrange: [], bodyBlue: [], bodyRed: [], bodyYellow: [], bodyGreen: []
 };
+
+export function setGameState(newState) { gameState = newState; }
 
 //Estado global del jugador, mano y cuerpo
 export let MI_ROL = null;
@@ -33,20 +35,17 @@ export function assignPlayer(idButton) {
 }
 
 // Shorthand para mantener compatibilidad con cada uno de los eventos del juego
-export function getStatus() { 
-    return gameState.status === HAND_KEY;
-}
+export function getStatus() { return gameState.turn === HAND_KEY; }
 
 // Control del robo de cartas
 export let inDrawPhase = false;
+export function resetDrawPhase() { inDrawPhase = false; }
+export function startDrawPhase() { inDrawPhase = true; }
 
-export function resetDrawPhase() {
-    inDrawPhase = false;
-}
-
-export function startDrawPhase() {
-    inDrawPhase = true;
-}
+// Mantener el estado local del botón de un solo uso por turno
+export let usedCardsTurn = false;
+export function passTurn() { usedCardsTurn = false; }
+export function recordUsage() { usedCardsTurn = true; }
 
 // Verifica si un cuerpo específico ha ganado (4 órganos diferentes y sanos)
 export function checkBodyVictory(bodyCards) {
@@ -57,10 +56,8 @@ export function checkBodyVictory(bodyCards) {
     const healthyOrgans = bodyCards.filter(organ => organ && (!organ.viruses || organ.viruses.length === 0));
     
     // Filtra nombres válidos para evitar que un 'undefined' cuente como punto
-    const validNames = healthyOrgans.map(organ => organ.name).filter(name => name !== undefined && name !== null);
-    
-    const uniqueHealthyNames = new Set(validNames);
+    const validNames = healthyOrgans.map(organ => organ.name).filter(name => name !== null);
     
     // Si hay 4 o más órganos termina el juego
-    return uniqueHealthyNames.size >= 4;
+    return new Set(validNames).size >= 4;
 }

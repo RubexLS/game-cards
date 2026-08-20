@@ -16,40 +16,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Mantener el estado local del botón de un solo uso por turno
-let yaUsoCartaEsteTurno = false;
-
-export function iniciarNuevoTurno() {
-    yaUsoCartaEsteTurno = false;
-}
-
-export function obtenerEstadoBotonTurno() {
-    return yaUsoCartaEsteTurno;
-}
-
-export function registrarUsoCarta() {
-    yaUsoCartaEsteTurno = true;
-}
-
-// Estructura inicial idéntica al JSON de Firebase
-const initialState = {
-    game_001: {
-        state: "en_progreso",
-        turn: true, // true = jugador, false = oponente
-        deck: [],
-        playerOrange: [],
-        playerBlue: [],
-        exileZone: [],
-        discardZone: [],
-        bodyZone: []
-    }
-};
+// Función interna auxiliar para asegurar el uso de ID correcto de documento
+function gameRefId(id) { return id || "game_001"; }
 
 export const firebaseMock = {
-    // exportamos las funciones manteniendo la misma firma que tu Mock
     getGame: async (gameId) => {
         try {
-            const gameRef = doc(db, "games", gameRefIdLimpio(gameId));
+            const gameRef = doc(db, "games", gameRefId(gameId));
             const docSnap = await getDoc(gameRef);
             if (docSnap.exists()) {
                 return docSnap.data();
@@ -66,7 +39,7 @@ export const firebaseMock = {
     // Actualiza los campos en tiempo real en la nube de Firebase
     updateGame: async (gameId, newData) => {
         try {
-            const gameRef = doc(db, "games", gameRefIdLimpio(gameId));
+            const gameRef = doc(db, "games", gameRefId(gameId));
             await updateDoc(gameRef, newData);
         } catch (error) {
             console.error("Error al actualizar partida en Firebase:", error);
@@ -76,7 +49,7 @@ export const firebaseMock = {
 
     // Herramienta extra: Escucha cambios en tiempo real sin recargar la página
     listenMatch: (gameId, callback) => {
-        const gameRef = doc(db, "games", gameRefIdLimpio(gameId));
+        const gameRef = doc(db, "games", gameRefId(gameId));
         return onSnapshot(gameRef, (snapshot) => {
             if (snapshot.exists()) {
                 callback(snapshot.data());
@@ -84,8 +57,3 @@ export const firebaseMock = {
         });
     }
 };
-
-// Función interna auxiliar para asegurar que usemos el ID correcto de documento
-function gameRefIdLimpio(id) {
-    return id || "game_001";
-}

@@ -1,154 +1,64 @@
-import { gameState, HAND_KEY, BODY_KEY, MAP_ROL, getStatus, GAME_ID, resetDrawPhase } from './state.js';
-import { firebaseMock, passTurn } from './firebaseMock.js';
-import { Cards, drawCard, renderBody } from './game.js';
+import { gameState, HAND_KEY, getStatus, BODY_KEY } from './state.js';
+import { usedCardsTurn, recordUsage } from './state.js';
+import { inDrawPhase } from './state.js';
+import { useCard, exileCard, drawCard } from './gameActions.js';
+import { handTemp, deckElement, deckCountElement, exileSlot, options, organBrain, organHeart, organStomach, organBone, organNervous, slotsRivalsDOM } from './domElements.js';
 
-// Elementos del DOM
-export const handTemp = document.getElementById('player-hand');
-const deckElement = document.getElementById('deck');
-const deckCountElement = document.getElementById('deck-count');
-const exileSlot = document.getElementById('exile-slot');
+//Renderizado de la mano del jugador y control de las acciones con las cartas de la misma
+export function renderHandPlayer(currentPLayer, contenedorHTML) {
+    if (!contenedorHTML) return;
+    contenedorHTML.innerHTML = '';
 
-let lastTurnScored = null;
+    currentPLayer.forEach((card, index) => {
+        const cardDiv = document.createElement('div');
+        if (index === 0) cardDiv.className = 'card left-card';
+        else if (index === 1) cardDiv.className = 'card medium-card';
+        else if (index === 2) cardDiv.className = 'card right-card';
+        cardDiv.style.backgroundImage = `url('${card.cardPhoto}')`;
+        cardDiv.style.backgroundSize = "cover"; // hasta aqui se grafican las cartas de la mano
+        
+        //acciones disponibles al seleccionar una carta
+        cardDiv.addEventListener('click', () => {
+            if (!options) return;
+            options.innerHTML = '';
 
-export async function startGame() {    
-    const gameData = await firebaseMock.getGame(GAME_ID);
-    if (!gameData || !gameData.unavailablePlayers || gameData.unavailablePlayers.length === 0) {
-        alert("No hay suficientes jugadores en la sala para iniciar.");
-        return;
-    }
+            const enabled = !usedCardsTurn && !inDrawPhase;
 
-    // Obtener los IDs de los botones (avatars) seleccionados
-    const playersOnline = gameData.unavailablePlayers;
-    const playerHost = playersOnline[0]; 
-    const handKeyHost = MAP_ROL[playerHost].mano;
-
-    if (HAND_KEY == handKeyHost){
-
-        Cards.buildDeck();
-        Cards.mingle();
-        let newDeck = [...Cards.deck];
-
-        let dataUpdate = {
-            state: "en_progreso",
-            turn: handKeyHost,
-            exileZone: [],
-            discardZone: []
-        };
-
-        // reparte cartas a todos los avatars seleccionados
-        playersOnline.forEach(idButton => {
-            const key = MAP_ROL[idButton]; // Traduce 'playerO' a 'playerOrange' y 'bodyOrange'
+            const btnUse = document.createElement('button');
+            btnUse.className = 'option use'; 
+            btnUse.innerText = enabled ? 'Usar' : (inDrawPhase ? 'Fase de Robo' : '1 por turno');
+            btnUse.disabled = !enabled;
             
-            let handPlayer = [];
-            for (let i = 0; i < 3; i++) {
-                if (newDeck.length > 0) {
-                    handPlayer.push(newDeck.pop());
-                }
-            }
+            const btnDiscard = document.createElement('button');
+            btnDiscard.className = 'option discard'; 
+            btnDiscard.innerText = 'Descartar';
+            btnDiscard.disabled = inDrawPhase;
+            
+            options.appendChild(btnUse); options.appendChild(btnDiscard);
 
-            // Creamos las propiedades en Firebase al vuelo solo para este jugador
-            dataUpdate[key.mano] = handPlayer;
-            dataUpdate[key.cuerpo] = [];
+            btnDiscard.addEventListener('click', async () => { 
+                options.innerHTML = ''; 
+                await exileCard(index); 
+            });
+            btnUse.addEventListener('click', async () => { 
+                if (!enabled) return; // multiples clicks
+                recordUsage(); // Bloquea la acción de "Usar" por el resto del turno
+                btnUse.disabled = true; 
+                options.innerHTML = ''; 
+                await useCard(index); 
+            });
         });
-
-
-        // actualiza el estado del mazo
-        dataUpdate.deck = newDeck;
-        await firebaseMock.updateGame(GAME_ID, dataUpdate);
-    }else{
-        alert("Solo el creador de la sala (el primer jugador en unirse) puede iniciar la partida. Esperando a que inicie...");
-    }
-}
-
-// Trae los datos de Firebase y actualiza las variables locales
-export async function syncDataBase(gameData) {
-    if (!gameData) return;
-
-    gameState.deck = gameData.deck || [];
-    gameState.status = gameData.turn;
-    gameState.exileZone = gameData.exileZone || [];
-
-    // control
-    const lobby = gameData.unavailablePlayers || [];
-    gameState.activePlayers = lobby.map(idButton => MAP_ROL[idButton].mano);
-
-    ['Orange', 'Blue', 'Red', 'Yellow', 'Green'].forEach(color => {
-        gameState[`player${color}`] = gameData[`player${color}`] || [];
-        gameState[`body${color}`] = gameData[`body${color}`] || [];
+        contenedorHTML.appendChild(cardDiv);  
     });
-
-    const currentTurn = gameData.turn;
-
-    if (getStatus() && lastTurnScored !== currentTurn) {
-        passTurn(); // Solo se desbloquea el botón cuando es una ronda 100% nueva para ti
-        resetDrawPhase(); 
-    } else if (!getStatus()) {
-        resetDrawPhase(); 
-    }
-    
-    if (gameData.state === "finalizado") {
-        options.innerHTML = ''; // Limpia botones de usar/descartar
-        handTemp.classList.add('disabled'); // Congela la mano****************
-        
-        // Traduce el nombre técnico del ganador a algo legible
-        const winnerName = gameData.winner ? gameData.winner.replace('player', 'Jugador ').replace('body', 'Jugador ') : 'Alguien';
-        
-        const oldBanner = document.getElementById('victory-banner');
-        if (oldBanner) oldBanner.remove();
-
-        // Evita alertas infinitas 
-        if (!document.getElementById('victory-banner')) {
-            const banner = document.createElement('div');
-            banner.id = 'victory-banner';
-            banner.style = "position:fixed; top:20%; left:50%; transform:translate(-50%, -50%); background:gold; color:black; padding:20px; font-size:24px; font-weight:bold; border-radius:10px; z-index:999; text-align:center;";
-            banner.innerHTML = `🏆 ¡${winnerName} ha ganado la partida! 🏆`;
-            
-            // Si eres el Host (el creador de la sala), te genera el botón de reinicio
-            const lobby = gameData.unavailablePlayers || [];
-            if (lobby.length > 0 && MAP_ROL[lobby[0]].mano === HAND_KEY) {
-                const btnReset = document.createElement('button');
-                btnReset.innerText = "Iniciar Nueva Partida";
-                btnReset.style = "display:block; margin:15px auto 0; padding:10px; cursor:pointer;";
-                btnReset.addEventListener('click', async () => {
-                    await resetWholeGame();
-                });
-                banner.appendChild(btnReset);
-            } else {
-                const textWait = document.createElement('p');
-                textWait.innerText = "Esperando que el Host reinicie la partida...";
-                textWait.style = "font-size: 14px; margin-top: 10px; font-weight: normal;";
-                banner.appendChild(textWait);
-            }
-            document.body.appendChild(banner);
-        }
-        
-        // Renderizamos el estado final por última vez y salimos
-        renderHand();
-        renderBoard();
-        renderBody();
-        return; 
-    } else {
-        // Si el juego NO está finalizado, nos aseguramos de remover el banner si existía de una partida anterior
-        const oldBanner = document.getElementById('victory-banner');
-        if (oldBanner) oldBanner.remove();
-    }
-
-    lastTurnScored = currentTurn;
-
-    renderHand();
-    renderBoard();
-    renderBody();
 }
 
 // Función para actualizar la interfaz visual de la mano
 export function renderHand(keyword) {
+    if (!handTemp) return;
     handTemp.innerHTML = '';
     const myCards = gameState[HAND_KEY] || [];
 
-    import('./game.js').then(m => {
-        m.renderHandPlayer(myCards, handTemp);
-    });
-
+    renderHandPlayer(myCards, handTemp);
     if (getStatus()) {
         handTemp.classList.remove('disabled');
     } else {
@@ -158,96 +68,134 @@ export function renderHand(keyword) {
 
 // renderizado y actualizado de los slots del tablero
 export function renderBoard(cardImage) {
+    if (!deckCountElement || !deckElement || !exileSlot) return;
     deckCountElement.innerText = gameState.deck.length;
-    if (gameState.deck.length === 0) {
-        deckElement.style.backgroundColor = '#7f8c8d';
-        deckElement.innerText = 'Vacío';
+    if (gameState.deck.length === 0) { 
+        deckElement.style.backgroundColor = '#7f8c8d'; 
+        deckElement.innerText = 'Vacío'; 
+    } else { 
+        deckElement.style.backgroundColor = ''; 
+        deckElement.innerText = ''; 
     }
 
-    if (gameState.exileZone.length > 0) {
+    if (gameState.exileZone?.length > 0) {
         const lastCard = gameState.exileZone[gameState.exileZone.length - 1];
-        exileSlot.className = 'card';
+        exileSlot.className = 'card'; 
         exileSlot.innerText = '';
-        // exileSlot.innerText = exileZone[exileZone.length - 1]; // nombres de las cartas
         exileSlot.style.backgroundImage = `url('${lastCard}')`;
         exileSlot.style.backgroundSize = "cover";
-    } else {
-        exileSlot.className = 'card-slot';
-        exileSlot.innerText = 'Vacío';
-    }
+    } else { 
+        exileSlot.className = 'card-slot'; 
+        exileSlot.innerText = 'Vacío'; 
+        exileSlot.style.backgroundImage = ''; }
 }
 
 // Renderizado del cuerpo del jugador y sus rivales
 export function renderBodyBoard (bodyKey, slotsHTML) {
     if (!slotsHTML) return;
-
-    Object.values(slotsHTML).forEach(slot => { if (slot) slot.innerHTML = ''; });
+    Object.values(slotsHTML).forEach(s => { if (s) s.innerHTML = ''; });
 
     const bodyCards = gameState[bodyKey] || [];
     bodyCards.forEach(card => {
-        let organSlot;
-        const organDiv = document.createElement('div');
-
+        let slot; 
+        const div = document.createElement('div');
         switch (card.name) {
-            case 'brain': organDiv.className = 'organ brain-card'; organSlot = slotsHTML.brain; break;
-            case 'heart': organDiv.className = 'organ heart-card'; organSlot = slotsHTML.heart; break;
-            case 'stomach': organDiv.className = 'organ stomach-card'; organSlot = slotsHTML.stomach; break;
-            case 'bone': organDiv.className = 'organ bone-card'; organSlot = slotsHTML.bone; break;
-            default: organDiv.className = 'organ nervous-card'; organSlot = slotsHTML.nervous; break;
+            case 'brain': div.className = 'organ brain-card'; slot = slotsHTML.brain; break;
+            case 'heart': div.className = 'organ heart-card'; slot = slotsHTML.heart; break;
+            case 'stomach': div.className = 'organ stomach-card'; slot = slotsHTML.stomach; break;
+            case 'bone': div.className = 'organ bone-card'; slot = slotsHTML.bone; break;
+            default: div.className = 'organ nervous-card'; slot = slotsHTML.nervous; break;
         }
+        if (slot) {
+            div.style.cssText = `
+                background-image: url('${card.cardPhoto}');
+                background-size: 100% 100%; 
+                width: 100%; 
+                height: 100%;
+            `;
 
-        if (organSlot) {
-            organDiv.style.backgroundImage = `url('${card.cardPhoto}')`;
-            organDiv.style.backgroundSize = '100% 100%';
-            organDiv.style.width = '100%';
-            organDiv.style.height = '100%';
-            
             // Atributos de metadatos listos para cuando lances virus
-            organDiv.dataset.propietario = bodyKey; 
-            organDiv.dataset.organo = card.name;
+            div.dataset.propietario = bodyKey; 
+            div.dataset.organo = card.name;
 
             // inyeccion de contenedor de iconos (virus, vacunas, inmunidad)
-            const tokensContainer = document.createElement('div');
-            tokensContainer.className = 'organ-tokens';
+            const container = document.createElement('div'); 
+            container.className = 'organ-tokens';
 
             // asegurar la existencia de los arrays de medicinas y virus
             const currentViruses = card.viruses || [];
             const currentMedicines = card.medicines || [];
 
             // Renderizar el icono de Virus
-            currentViruses.forEach(virus => {
+            (currentViruses).forEach(v => { 
                 const virusToken = document.createElement('div');
-                virusToken.className = `token virus-token ${virus.color}`;
-                tokensContainer.appendChild(virusToken);
+                virusToken.className = `token virus-token ${v.color}`; 
+                container.appendChild(virusToken); 
             });
 
             // Renderiza el icono de Medicina
-            currentMedicines.forEach(medicine => {
+            (currentMedicines).forEach(m => {
                 const medToken = document.createElement('div');
-                medToken.className = `token medicine-token ${medicine.color}`;
-                tokensContainer.appendChild(medToken);
+                medToken.className = `token medicine-token ${m.color}`; 
+                container.appendChild(medToken); 
             });
 
             // Si tiene 2 vacunas o más, añade la clase de inmunidad al órgano
-            if (currentMedicines.length >= 2) {
-                organDiv.classList.add('is-immune');
+            if ((currentMedicines).length >= 2) {
+                div.classList.add('is-immune');
             }
 
-            // Metemos los iconos dentro del órgano antes de agregarlo al slot
-            organDiv.appendChild(tokensContainer);
-            organSlot.appendChild(organDiv);
+            // inyecta los iconos dentro del órgano antes de agregarlo al slot
+            div.appendChild(container); slot.appendChild(div);
         }
     });
+    Object.values(slotsHTML).forEach(s => { 
+        if (s && s.children.length === 0) s.innerText = 'Vacío'; 
+    });
+}
 
-    Object.values(slotsHTML).forEach(slot => {
-        if (slot && slot.children.length === 0) {
-            slot.innerText = 'Vacío';
+// Inyeccion visual
+export function renderBody() {
+    // Dibuja el cuerpo local
+    renderBodyBoard(BODY_KEY, { 
+        brain: organBrain, 
+        heart: organHeart, 
+        stomach: organStomach, 
+        bone: organBone, 
+        nervous: organNervous 
+    });
+
+    // Rota y dibuja los cuerpos de los rivales
+    if (!BODY_KEY) return;
+    //Filtra los cuerpos de jugadores que están actualmente en partida
+    const activeBodies = gameState.activePlayers.map(p => 
+        p.replace('player', 'body')
+    );
+    // Busca en qué posición del array global esta ubicado
+    const index = activeBodies.indexOf(BODY_KEY);
+    // Corte y reordenamiento del array 
+    const rotated = [
+        ...activeBodies.slice(index + 1),
+        ...activeBodies.slice(0, index)
+    ];
+
+    // Limpia todos los contenedores del DOM de rivales por seguridad (evita fantasmas de partidas anteriores)
+    slotsRivalsDOM.forEach(s => {
+        Object.values(s).forEach(d => { if (d) d.innerHTML = 'Vacío'; })
+    });
+    // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
+    rotated.forEach((key, index) => { 
+        const slotDestiny = slotsRivalsDOM[index];
+        if (slotDestiny) {
+            renderBodyBoard(key, slotDestiny);
         }
     });
 }
 
 // Detecta clicks en el mazo
-deckElement.addEventListener('click', drawCard);
+if (deckElement) {
+    deckElement.addEventListener('click', drawCard);
+}
 
 // solo para online
 // export function rolRecovery() {
@@ -262,25 +210,3 @@ deckElement.addEventListener('click', drawCard);
 //     return null;
 // }
 
-// limpia Firebase por completo manteniendo los mismos jugadores de la sala
-async function resetWholeGame() {
-    const gameData = await firebaseMock.getGame(GAME_ID);
-    if (!gameData) return;
-
-    let dataReset = {
-        state: "esperando", // Regresa al menú/sala de espera
-        turn: gameData.unavailablePlayers[0] ? MAP_ROL[gameData.unavailablePlayers[0]].mano : "playerOrange",
-        deck: [],
-        exileZone: [],
-        discardZone: [],
-        winner: null
-    };
-
-    // Limpiamos las manos y cuerpos de todos los colores
-    ['Orange', 'Blue', 'Red', 'Yellow', 'Green'].forEach(color => {
-        dataReset[`player${color}`] = [];
-        dataReset[`body${color}`] = [];
-    });
-
-    await firebaseMock.updateGame(GAME_ID, dataReset);
-}

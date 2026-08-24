@@ -5,7 +5,8 @@ import { renderHandPlayer } from './ui.js';
 import { handTemp, options } from './domElements.js';
 
 // controla los clics internos de las cartas que requieren 2 pasos
-let contagionSource = null; 
+let contagionSource = null;
+let transplantSource = null;
 
 // Enrutador principal de tratamientos
 export function handleTreatmentClick(organTarget) {
@@ -14,10 +15,13 @@ export function handleTreatmentClick(organTarget) {
             processContagion(organTarget);
             break;
         case 'thief':
-            // processThief(organTarget); // Listo para el futuro
+            processThief(organTarget);
             break;
         case 'transplant':
-            // processTransplant(organTarget); // Listo para el futuro
+            processTransplant(organTarget);
+            break;
+        case 'medical_error':
+            processMedicalError(organTarget);
             break;
         default:
             break;
@@ -77,8 +81,6 @@ async function processContagion(organTarget) {
             alert("¡Objetivo inválido! El órgano del rival debe estar completamente limpio (sin vacunas ni infecciones).");
             return;
         }
-
-        // aplicacion de efectos
         
         // Quita el virus de nuestro organo
         const myBody = JSON.parse(JSON.stringify(gameState[BODY_KEY] || []));
@@ -163,5 +165,94 @@ export async function applyGloveEffect(cardIndex) {
 
     alert("¡Guante de Látex usado! Has obligado a todos tus rivales a descartar sus manos. Roba para finalizar tu turno.");
 
+    await firebaseMock.updateGame(GAME_ID, updateData);
+}
+
+async function processThief(organTarget) {
+    const targetBodyKey = organTarget.dataset.propietario;
+    const targetOrganName = organTarget.dataset.organo;
+
+    // 1. CONDICIÓN: Debe ser el cuerpo de un rival
+    if (targetBodyKey === BODY_KEY) {
+        alert("¡No puedes robarte a ti mismo! Elige el órgano de un rival.");
+        return;
+    }
+
+    // 2. CONDICIÓN: Comprobar que yo no tenga ya ese órgano (Evitar duplicados)
+    const myBody = JSON.parse(JSON.stringify(gameState[BODY_KEY] || []));
+    const hasDuplicate = myBody.some(organ => organ.name === targetOrganName);
+    if (hasDuplicate) {
+        alert(`¡No puedes robar este órgano! Ya tienes un ${targetOrganName} en tu cuerpo.`);
+        // Cancelamos la jugada sin gastar la carta restaurando la mano
+        setActiveTargetingCard(null);
+        document.body.style.cursor = 'default';
+        return;
+    }
+
+    // 3. CONDICIÓN: Verificar el estado del órgano en el rival
+    const rivalBody = JSON.parse(JSON.stringify(gameState[targetBodyKey] || []));
+    const organIdx = rivalBody.findIndex(o => o.name === targetOrganName);
+    
+    if (organIdx === -1) {
+        alert("Ese rival ya no tiene ese órgano en su cuerpo.");
+        return;
+    }
+
+    const rivalOrgan = rivalBody[organIdx];
+    const currentMedicines = rivalOrgan.medicines || [];
+
+    // REGLA: Si tiene 2 o más vacunas, es inmune y no se puede robar
+    if (currentMedicines.length >= 2) {
+        alert("¡Ese órgano es inmune! Tiene dos o más vacunas y el Ladrón no puede tocarlo.");
+        return;
+    }
+
+    // --- SI PASA TODAS LAS VALIDACIONES, SE EJECUTA EL ROBO ---
+
+    // Extrayendo el órgano completo del rival (con sus virus y medicinas actuales)
+    const [stolenOrgan] = rivalBody.splice(organIdx, 1);
+
+    // Lo indexamos a nuestro propio cuerpo
+    myBody.push(stolenOrgan);
+
+    // Descartamos la carta de Ladrón de nuestra mano
+    const tempHand = JSON.parse(JSON.stringify(gameState[HAND_KEY] || []));
+    const idx = tempHand.findIndex(c => c.name === 'thief');
+    const tempExile = JSON.parse(JSON.stringify(gameState.exileZone || []));
+    
+    if (idx !== -1) {
+        const [usedCard] = tempHand.splice(idx, 1);
+        tempExile.push(usedCard.cardPhoto);
+    }
+
+    // Comprobamos si al robar este órgano completamos la victoria (4 órganos sanos)
+    const { checkBodyVictory } = await import('./state.js');
+    const hasWon = checkBodyVictory(myBody);
+
+    // Preparar el paquete masivo para Firebase
+    let updateData = {
+        [HAND_KEY]: tempHand,
+        [BODY_KEY]: myBody,
+        [targetBodyKey]: rivalBody,
+        exileZone: tempExile
+    };
+
+    // Si ganamos la partida al realizar el robo, cerramos el juego en el mismo paquete
+    if (hasWon) {
+        updateData.state = "finalizado";
+        updateData.winner = HAND_KEY;
+    }
+
+    // Limpieza de UI local previa al envío de red
+    setActiveTargetingCard(null);
+    document.body.style.cursor = 'default';
+    if (options) options.innerHTML = '';
+
+    const { renderHandPlayer } = await import('./ui.js');
+    renderHandPlayer(tempHand, handTemp);
+
+    alert("¡Órgano robado con éxito! Ve al mazo a robar para finalizar tu turno.");
+
+    // Envío único y atómico a la base de datos
     await firebaseMock.updateGame(GAME_ID, updateData);
 }

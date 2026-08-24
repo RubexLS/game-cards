@@ -132,6 +132,10 @@ export async function useCard(cardIndex) {
     }  else if (selectedCard.type === 'treatment' && selectedCard.name === 'glove') {
         // Ejecuta el efecto inmediatamente pasando la posición de la carta en la mano
         import('./treatmentManager.js').then(m => m.applyGloveEffect(cardIndex));
+    } else if (selectedCard.type === 'treatment' && selectedCard.name === 'thief') {
+        activeTargetingCard = { ...selectedCard, index: cardIndex };
+        document.body.style.cursor = 'crosshair'; 
+        alert("¡Ladrón activado! Haz clic en el órgano de un rival que desees robar.");
     }
 }
 

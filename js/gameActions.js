@@ -136,6 +136,14 @@ export async function useCard(cardIndex) {
         activeTargetingCard = { ...selectedCard, index: cardIndex };
         document.body.style.cursor = 'crosshair'; 
         alert("¡Ladrón activado! Haz clic en el órgano de un rival que desees robar.");
+    } else if (selectedCard.type === 'treatment' && selectedCard.name === 'transplant') { // ¡NUEVO!
+        activeTargetingCard = { ...selectedCard, index: cardIndex };
+        document.body.style.cursor = 'crosshair';
+        alert("¡Trasplante activado! Elige el primer órgano (tuyo o de un rival) que deseas cambiar.");
+    } else if (selectedCard.type === 'treatment' && selectedCard.name === 'medical_error') { // ¡NUEVO!
+        activeTargetingCard = { ...selectedCard, index: cardIndex };
+        document.body.style.cursor = 'crosshair';
+        alert("¡Error Médico activado! Haz clic en cualquier órgano de un rival para intercambiar todo tu cuerpo con él.");
     }
 }
 

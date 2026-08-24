@@ -271,6 +271,26 @@ async function processTransplant(organTarget) {
     }
 }
 
+async function processMedicalError(organTarget) {
+    const targetBodyKey = organTarget.dataset.propietario;
+
+    if (targetBodyKey === BODY_KEY) {
+        alert("Debes seleccionar el órgano de un rival para intercambiar todo tu cuerpo con él.");
+        return;
+    }
+
+    // Intercambio completo de los cuerpos
+    const myBody = JSON.parse(JSON.stringify(gameState[BODY_KEY] || []));
+    const rivalBody = JSON.parse(JSON.stringify(gameState[targetBodyKey] || []));
+
+    await finalizarTratamiento('medical_error', {
+        [BODY_KEY]: rivalBody,
+        [targetBodyKey]: myBody
+    });
+
+    alert("¡Error Médico! Has intercambiado tu cuerpo por completo con tu rival.");
+}
+
 // === FUNCIÓN AUXILIAR CENTRALIZADA PARA LIMPIEZA Y CIERRE ===
 async function finishTreatment(cardName, bodiesToUpdate) {
     const tempHand = JSON.parse(JSON.stringify(gameState[HAND_KEY] || []));

@@ -100,7 +100,7 @@ export async function syncDataBase(gameData) {
 }
 
 // limpia Firebase por completo manteniendo los mismos jugadores de la sala
-async function resetWholeGame() {
+export async function resetWholeGame() {
     const gameData = await firebaseMock.getGame(GAME_ID);
     if (!gameData) return;
 

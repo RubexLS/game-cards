@@ -1,4 +1,4 @@
-import { gameState, HAND_KEY, GAME_ID, checkBodyVictory } from './state.js';
+import { gameState, HAND_KEY, BODY_KEY, GAME_ID, checkBodyVictory } from './state.js';
 import { firebaseMock } from './firebaseMock.js';
 import { renderHandPlayer, renderHand } from './ui.js';
 import { handTemp } from './domElements.js';
@@ -8,6 +8,16 @@ export function initTargetListener() {
     // Escuchamos los clics en todo el documento para atrapar los clics en los órganos
     document.addEventListener('click', async (event) => {
         if (!activeTargetingCard) return;
+
+        if (activeTargetingCard.type === 'treatment') {
+            const organTarget = event.target.closest('.organ');
+            if (!organTarget) return;
+
+            // Importamos el módulo y le pasamos el elemento clickeado
+            const m = await import('./treatmentManager.js');
+            m.handleTreatmentClick(organTarget);
+            return; 
+        }
 
         // Deteccion de click en elementos con la clase 'organ'
         const organTarget = event.target.closest('.organ');

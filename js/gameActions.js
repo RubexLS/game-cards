@@ -124,6 +124,13 @@ export async function useCard(cardIndex) {
         const bodyGameElem = document.querySelector('.bodyGame');
         if (bodyGameElem) bodyGameElem.style.cursor = 'crosshair'; 
         alert(`Has seleccionado ${selectedCard.name}. Haz clic en el órgano que deseas vacunar.`); // mensaje temporal para verificar compilacion
+    } else if (selectedCard.type === 'treatment' && selectedCard.name === 'contagion') {
+        // Guarda la carta de tratamiento activa
+        activeTargetingCard = { ...selectedCard, index: cardIndex };
+    
+        // Feedback visual: cursor de ayuda/habilidad
+        document.body.style.cursor = 'crosshair'; 
+        alert("¡Contagio activado! Primero haz clic en uno de TUS órganos infectados para tomar el virus.");
     }
 }
 

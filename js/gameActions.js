@@ -127,10 +127,11 @@ export async function useCard(cardIndex) {
     } else if (selectedCard.type === 'treatment' && selectedCard.name === 'contagion') {
         // Guarda la carta de tratamiento activa
         activeTargetingCard = { ...selectedCard, index: cardIndex };
-    
-        // Feedback visual: cursor de ayuda/habilidad
         document.body.style.cursor = 'crosshair'; 
         alert("¡Contagio activado! Primero haz clic en uno de TUS órganos infectados para tomar el virus.");
+    }  else if (selectedCard.type === 'treatment' && selectedCard.name === 'glove') {
+        // Ejecuta el efecto inmediatamente pasando la posición de la carta en la mano
+        import('./treatmentManager.js').then(m => m.applyGloveEffect(cardIndex));
     }
 }
 

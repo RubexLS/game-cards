@@ -119,3 +119,49 @@ async function processContagion(organTarget) {
         await firebaseMock.updateGame(GAME_ID, updateData);
     }
 }
+
+export async function applyGloveEffect(cardIndex) {
+    // 1 clones profundos de seguridad
+    const tempExile = JSON.parse(JSON.stringify(gameState.exileZone || []));
+    const tempHand = JSON.parse(JSON.stringify(gameState[HAND_KEY] || []));
+
+    // 2 descartamos la carta de tratamiento
+    const [usedGlove] = tempHand.splice(cardIndex, 1);
+    tempExile.push(usedGlove.cardPhoto);
+
+    let updateData = {
+        [HAND_KEY]: tempHand,
+        exileZone: tempExile
+    };
+
+    // 3 Recorre a TODOS los rivales activos de la sala para destruir sus manos
+    gameState.activePlayers.forEach(playerKey => {
+        // Excluimos nuestra propia mano de la destrucción
+        if (playerKey !== HAND_KEY) {
+            const rivalHand = gameState[playerKey] || [];
+            
+            // Recorremos las cartas del rival y las descarta
+            rivalHand.forEach(card => {
+                if (card && card.cardPhoto) {
+                    tempExile.push(card.cardPhoto);
+                }
+            });
+
+            // Vacia la mano de este rival en el paquete de actualización
+            updateData[playerKey] = [];
+        }
+    });
+
+    // 5 Limpieza de UI local previa al envío de red
+    setActiveTargetingCard(null);
+    document.body.style.cursor = 'default';
+    if (options) options.innerHTML = '';
+
+    // reenderiza la mano actual (2 cartas)
+    const { renderHandPlayer } = await import('./ui.js');
+    renderHandPlayer(tempHand, handTemp);
+
+    alert("¡Guante de Látex usado! Has obligado a todos tus rivales a descartar sus manos. Roba para finalizar tu turno.");
+
+    await firebaseMock.updateGame(GAME_ID, updateData);
+}

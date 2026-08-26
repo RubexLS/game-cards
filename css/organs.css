@@ -1,0 +1,101 @@
+/* --- SLOTS DE ÓRGANOS EN GENERAL --- */
+.organSlot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Cambiamos el escalado: priorizamos el ancho para que tengan presencia en pantalla */
+    width: 85%; 
+    height: 90%; 
+    aspect-ratio: 5 / 7; 
+    position: relative;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Cambiamos a 100% 100% para que el marco del slot rellene la tarjeta */
+    background-size: 100% 100%; 
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* --- DISEÑO DEL ÓRGANO INSTANCIADO --- */
+.organ {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    position: relative;
+    transition: filter 0.2s, box-shadow 0.2s;
+}
+
+/* Feedback de Inmunidad */
+.organ.is-immune {
+    box-shadow: 0 0 12px 4px #3498db;
+    filter: brightness(1.1);
+}
+
+/* --- MAPEO DEL CUERPO LOCAL --- */
+.bodyGame .organSlot { background-color: rgba(255, 255, 255, 0.15); }
+
+#brain-slot    { grid-column: 1 / 2; grid-row: 1 / 2; background-image: url(../assets/board/brain_slot.png); }   
+#heart-slot    { grid-column: 2 / 3; grid-row: 1 / 2; background-image: url(../assets/board/heart_slot.png); }
+#stomach-slot  { grid-column: 1 / 2; grid-row: 2 / 3; background-image: url(../assets/board/stomach_slot.png); }
+#bone-slot     { grid-column: 2 / 3; grid-row: 2 / 3; background-image: url(../assets/board/bone_slot.png); }
+#nervous-slot  { grid-column: 1 / 2; grid-row: 3 / 4; background-image: url(../assets/board/nervous_system.png); }
+
+/* --- FILAS DE LOS CONTENDORES DE LOS RIVALES --- */
+.rivalOne   { grid-row: 1 / 2; background-color: rgba(30, 14, 206, 0.2); }
+.rivalTwo   { grid-row: 2 / 3; background-color: rgba(231, 76, 60, 0.2); }
+.rivalThree { grid-row: 3 / 4; background-color: rgba(206, 232, 12, 0.2); }
+.rivalFour  { grid-row: 4 / 5; background-color: rgba(7, 234, 11, 0.2); }
+
+.rivalOne, .rivalTwo, .rivalThree, .rivalFour {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 10px;
+    width: 100%;
+    flex: 1; 
+    min-height: 0; 
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    align-items: center; 
+    justify-items: center;
+}
+
+.bodyPlayers .organSlot { background-color: rgba(0, 0, 0, 0.6); }
+
+/* MAPEO DE RIVALES*/
+[id^="brain-slot-rival"]   { grid-column: 1 / 2; background-image: url(../assets/board/brain_slot.png); }
+[id^="heart-slot-rival"]   { grid-column: 2 / 3; background-image: url(../assets/board/heart_slot.png); }
+[id^="stomach-slot-rival"] { grid-column: 3 / 4; background-image: url(../assets/board/stomach_slot.png); }
+[id^="bone-slot-rival"]    { grid-column: 4 / 5; background-image: url(../assets/board/bone_slot.png); }
+[id^="nervous-slot-rival"] { grid-column: 5 / 6; background-image: url(../assets/board/nervous_system.png); }
+
+/* --- CUERPO LOCAL --- */
+.bodyGame {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+    align-items: center;
+    justify-items: center;
+}
+
+/* --- CONTENEDOR DE JUGADORES RIVALES --- */
+.bodyRivals {
+    width: 100%;
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; 
+    gap: 10px;
+    padding: 10px 0;
+}
+
+/* --- CUERPO DE LOS RIVALES --- */
+.bodyPlayers {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    gap: 10px;
+}

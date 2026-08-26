@@ -42,8 +42,8 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             });
             btnUse.addEventListener('click', async () => { 
                 if (!enabled) return; // multiples clicks
-                recordUsage(); // Bloquea la acción de "Usar" por el resto del turno
-                btnUse.disabled = true; 
+                // recordUsage(); // Bloquea la acción de "Usar" por el resto del turno
+                // btnUse.disabled = true; 
                 options.innerHTML = ''; 
                 await useCard(index); 
             });

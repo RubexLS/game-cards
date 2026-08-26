@@ -79,9 +79,12 @@ export async function useCard(cardIndex) {
         const hasDuplicate = tempBody.some(organ => organ.name === selectedCard.name);
         if (hasDuplicate) {
             alert(`¡Ya tienes un ${selectedCard.name} en tu cuerpo! No puedes duplicarlo.`);
-            passTurn(); 
+            // passTurn(); 
+            if (options) options.innerHTML = '';
             return; 
         }
+
+        recordUsage();
 
         const tempHand = [...gameState[HAND_KEY]];    
         const organCard = tempHand.splice(cardIndex, 1)[0];
@@ -131,6 +134,7 @@ export async function useCard(cardIndex) {
         alert("¡Contagio activado! Primero haz clic en uno de TUS órganos infectados para tomar el virus.");
     }  else if (selectedCard.type === 'treatment' && selectedCard.name === 'glove') {
         // Ejecuta el efecto inmediatamente pasando la posición de la carta en la mano
+        recordUsage();
         import('./treatmentManager.js').then(m => m.applyGloveEffect(cardIndex));
     } else if (selectedCard.type === 'treatment' && selectedCard.name === 'thief') {
         activeTargetingCard = { ...selectedCard, index: cardIndex };

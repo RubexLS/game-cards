@@ -283,7 +283,7 @@ async function processMedicalError(organTarget) {
     const myBody = JSON.parse(JSON.stringify(gameState[BODY_KEY] || []));
     const rivalBody = JSON.parse(JSON.stringify(gameState[targetBodyKey] || []));
 
-    await finalizarTratamiento('medical_error', {
+    await finishTreatment('medical_error', {
         [BODY_KEY]: rivalBody,
         [targetBodyKey]: myBody
     });
@@ -293,6 +293,9 @@ async function processMedicalError(organTarget) {
 
 // === FUNCIÓN AUXILIAR CENTRALIZADA PARA LIMPIEZA Y CIERRE ===
 async function finishTreatment(cardName, bodiesToUpdate) {
+    const { recordUsage } = await import('./state.js');
+    recordUsage();
+
     const tempHand = JSON.parse(JSON.stringify(gameState[HAND_KEY] || []));
     const idx = tempHand.findIndex(c => c.name === cardName);
     const tempExile = JSON.parse(JSON.stringify(gameState.exileZone || []));

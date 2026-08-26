@@ -42,7 +42,7 @@ export function initTargetListener() {
             const bodyGameElem = document.querySelector('.bodyGame');
             if (bodyGameElem) bodyGameElem.style.cursor = 'default';
 
-            import('./state.js').then(s => s.passTurn());
+            // import('./state.js').then(s => s.passTurn());
             renderHand();
         };
 
@@ -123,6 +123,9 @@ export function initTargetListener() {
                 });
             }
         }
+
+        const { recordUsage } = await import('./state.js');
+        recordUsage();
 
         // Remueve el virus de la mano del jugador
         const tempHand = JSON.parse(JSON.stringify(gameState[HAND_KEY] || []));

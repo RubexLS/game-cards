@@ -79,3 +79,26 @@ if (playBtn) {
         await startGame(); 
     });
 }
+
+
+//escucha si el tamaño de la pantalla cambia
+document.addEventListener("DOMContentLoaded", () => {
+    const toggleBtn = document.getElementById("toggle-rivals-btn");
+    const rivalsPanel = document.getElementById("rivals");
+
+    if (toggleBtn && rivalsPanel) {
+        toggleBtn.addEventListener("click", () => {
+            // Alterna la clase active para deslizar el panel
+            rivalsPanel.classList.toggle("active");
+            
+            // Alterna el texto que despliega el cuerpo de los rivales
+            if (rivalsPanel.classList.contains("active")) {
+                toggleBtn.innerText = "❌ Cerrar";
+                toggleBtn.style.backgroundColor = "#34495e";
+            } else {
+                toggleBtn.innerText = "👥 Rivales";
+                toggleBtn.style.backgroundColor = "#e74c3c";
+            }
+        });
+    }
+});

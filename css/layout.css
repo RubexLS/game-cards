@@ -17,10 +17,10 @@ body {
 .game-container {
     display: grid;
     /* Aumentamos el peso de la tercera columna (de 2.5fr a 3.5fr) */
-    grid-template-columns: 1fr 1.8fr 3.5fr; 
+    grid-template-columns: 1fr 1.5fr 2fr; 
     gap: 15px;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     padding: 10px;
     align-items: center;
 }

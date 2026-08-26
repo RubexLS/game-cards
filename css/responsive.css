@@ -1,0 +1,157 @@
+/* AJUSTES PARA TABLETS (Pantallas menores a 1024px) */
+@media (max-width: 1024px) {
+    .game-container {
+        grid-template-columns: 1.2fr 2fr 2.5fr; 
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .organSlot {
+        max-width: 75px;
+    }
+
+    .title {
+        font-size: 80px;
+    }
+}
+
+/* boton de despliegue de rivales (oculto en pc)*/
+.toggle-btn {
+    display: none;
+}
+
+/* AJUSTES PARA CELULARES (Pantallas menores a 768px) */
+@media (max-width: 768px) {
+    /*nuevo mapeo de las secciones*/
+    .game-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        /* Fila 1: Tablero central | Fila 2: Tus órganos | Fila 3: Tu mano de cartas */
+        grid-template-rows: 1fr auto auto; 
+        height: 100vh;
+        width: 100vw;
+        gap: 10px;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    /* tablero */
+    .map-game {
+        grid-row: 1 / 2; 
+        display: grid;
+        grid-template-rows: auto 1fr; /* Mano del oponente arriba, tablero abajo (borrar cuando se termine)*/
+        gap: 10px;
+        height: 100%;
+        min-height: 0; /* Evita que la sección colapse o se aplaste */
+    }
+
+    .board {
+        height: 100%;
+        padding: 10px;
+    }
+
+    .card-slot, .card {
+        width: 70px;  
+        height: 100px;
+        font-size: 0.9rem;
+    }
+
+    /* cuerpo del jugador local*/
+    .bodyGame {
+        grid-row: 2 / 3 !important; 
+        display: flex !important;           /* Cambiamos de grid a flex para alineación horizontal directa */
+        flex-direction: row !important;     /* Fuerza una fila de izquierda a derecha */
+        justify-content: center !important; /* Centra los órganos en la pantalla */
+        align-items: center !important;
+        gap: 8px !important;                /* Espaciado compacto entre tus órganos */
+        width: 100% !important;
+        height: auto !important;
+        padding: 5px 0 !important;
+    }
+
+    .bodyGame .organSlot {
+        flex: 1 !important;
+        width: 100% !important;
+        max-width: 65px !important;        /* Tamaño optimizado para celulares */
+        max-height: 95px !important;
+        aspect-ratio: 5 / 7 !important;
+        background-size: 100% 100% !important;
+    }
+
+    /* mano  */
+    .player-hand-cards {
+        grid-row: 3 / 4; 
+        height: 130px;   
+    }
+
+    .hand {
+        gap: 4px;
+    }
+
+    .oponent-hand-cards {
+        height: 60px;
+    }
+
+    /* Reducción del abanico en móvil para evitar desbordes */
+    .left-card { margin-right: -15px; transform: rotate(-5deg); }
+    .right-card { margin-left: -15px; transform: rotate(5deg); }
+
+    .player-hand-cards .card:hover {
+        transform: translateY(-15px) scale(1.08); 
+    }
+
+    /* pestaña desplazable */
+    .toggle-btn {
+        display: block;
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        z-index: 10000;
+        background-color: #e74c3c;
+        color: white;
+        border: 2px solid white;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .bodyRivals {
+        position: fixed;
+        top: 0;
+        right: -100%; /* Totalmente oculto a la derecha por defecto */
+        width: 85%;   
+        max-width: 320px;
+        height: 100vh;
+        background-color: rgba(26, 37, 47, 0.98); 
+        z-index: 9999;
+        padding: 60px 15px 20px 15px; 
+        box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+        transition: right 0.3s ease-in-out; 
+    }
+
+    /* Clase activa que se dispara con el JavaScript */
+    .bodyRivals.active {
+        right: 0; 
+    }
+
+    .bodyPlayers {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .rivalOne, .rivalTwo, .rivalThree, .rivalFour {
+        grid-template-columns: repeat(5, 1fr);
+        padding: 6px;
+        gap: 4px;
+    }
+
+    .rivalOne .organSlot, .rivalTwo .organSlot, 
+    .rivalThree .organSlot, .rivalFour .organSlot {
+        max-width: 45px; 
+    }
+}

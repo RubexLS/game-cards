@@ -113,15 +113,16 @@
     justify-content: center;
     gap: 4px;
     position: absolute;
-    bottom: 4px;
-    left: 0;
-    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: auto;
     z-index: 10;
 }
 
 .token.virus-token, .token.medicine-token {
-    width: 24px; /* Tamaño adaptado para que luzcan proporcionales en pantallas compactas */
-    height: 24px;
+    width: 50px; /* Tamaño adaptado para que luzcan proporcionales en pantallas compactas */
+    height: 50px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;

@@ -1,7 +1,7 @@
 import { gameState, HAND_KEY, MAP_ROL, GAME_ID, resetDrawPhase, setGameState, passTurn } from './state.js';
 import { firebaseMock } from './firebaseMock.js';
 import { Cards } from './deck.js';
-import { showVictoryBanner, hideVictoryBanner, freezeHandInterface, clearOptions } from './mainUI.js';
+import { showVictoryBanner, hideVictoryBanner, freezeHandInterface, clearOptions, updateCentralActionPanel } from './mainUI.js';
 import { renderHand, renderBoard, renderBody } from './ui.js';
 
 let lastTurnScored = null;
@@ -64,7 +64,8 @@ export async function syncDataBase(gameData) {
         ...gameState,
         deck: gameData.deck || [], 
         turn: gameData.turn, 
-        exileZone: gameData.exileZone || [] 
+        exileZone: gameData.exileZone || [],
+        lastPlay: gameData.lastPlay || null
     };
 
     // control
@@ -97,6 +98,10 @@ export async function syncDataBase(gameData) {
     renderHand(); 
     renderBoard(); 
     renderBody();
+
+    if (gameData.state === "en_progreso") {
+        updateCentralActionPanel(gameData, HAND_KEY);
+    }
 }
 
 // limpia Firebase por completo manteniendo los mismos jugadores de la sala

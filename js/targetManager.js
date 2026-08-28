@@ -141,11 +141,27 @@ export function initTargetListener() {
 
         renderHandPlayer(tempHand, handTemp);
 
+        //------------------------------------------------
+        const propietarioLabels = {
+            'bodyOrange': 'Cuerpo Naranja 🍊', 'bodyBlue': 'Cuerpo Azul 💧', 'bodyRed': 'Cuerpo Rojo 🔥', 'bodyYellow': 'Cuerpo Amarillo ⚡', 'bodyGreen': 'Cuerpo Verde 🌿'
+        };
+        const organoLabels = {
+            'bone': 'Huesos', 'brain': 'Cerebro', 'heart': 'Corazón', 'stomach': 'Estómago', 'nervousSystem': 'Sist. Nervioso'
+        };
+        const textoObjetivo = `${organoLabels[targetOrganName] || targetOrganName} de ${propietarioLabels[targetBodyKey] || 'un rival'}`;
+        // ------------------------------------------------
+
         const hasWon = checkBodyVictory(targetBody);
         let updateData = { 
             [HAND_KEY]: tempHand, 
             [targetBodyKey]: targetBody, 
-            exileZone: tempExile 
+            exileZone: tempExile,
+            lastPlay: {
+                playerKey: HAND_KEY,
+                cardType: activeTargetingCard.name, // ej: 'blue_virus', 'red_medicine'
+                targetPlay: textoObjetivo,
+                timestamp: Date.now()
+            }
         };
         
         // Si la acción completó la victoria (por ejemplo sanando el 4to órgano), cierra el juego en el mismo paquete

@@ -43,6 +43,8 @@ export async function drawCard() {
         
         if (options) options.innerHTML = '';
         updateData.turn = playersInGame[nextIndex]; // Cambio de turno automáticamente en la nube
+
+        updateData.lastPlay = null;
     }
 
     await firebaseMock.updateGame(GAME_ID, 
@@ -65,7 +67,13 @@ export async function exileCard(cardIndex) {
 
     await firebaseMock.updateGame(GAME_ID, {
         [HAND_KEY]: tempHand,
-        exileZone: tempExile
+        exileZone: tempExile,
+        lastPlay: {
+            playerKey: HAND_KEY,
+            cardType: "discard_action",
+            targetPlay: "Descartó una carta de su mano 🫳",
+            timestamp: Date.now()
+        }
     });
 }
 
@@ -102,7 +110,13 @@ export async function useCard(cardIndex) {
 
         let updateData = {
             [HAND_KEY]: tempHand,
-            [BODY_KEY]: tempBody
+            [BODY_KEY]: tempBody,
+            lastPlay: {
+                playerKey: HAND_KEY,
+                cardType: organCard.name, // 'brain', 'heart', etc.
+                targetPlay: "¡Lo sumó a su propio cuerpo! 🫀",
+                timestamp: Date.now()
+            }
         };
 
         if (hasWon) {

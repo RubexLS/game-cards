@@ -110,7 +110,13 @@ export async function applyGloveEffect(cardIndex) {
 
     let updateData = {
         [HAND_KEY]: tempHand,
-        exileZone: tempExile
+        exileZone: tempExile,
+        lastPlay: {
+            playerKey: HAND_KEY,
+            cardType: "treatment_glove",
+            targetPlay: "¡Hizo descartar a TODOS sus rivales! 🧤",
+            timestamp: Date.now()
+        }
     };
 
     // 3 Recorre a TODOS los rivales activos de la sala para destruir sus manos
@@ -305,6 +311,13 @@ async function finishTreatment(cardName, bodiesToUpdate) {
         tempExile.push(usedCard.cardPhoto);
     }
 
+    const treatmentLabels = {
+        'contagion': 'un Contagio de virus 🦠',
+        'thief': 'un Robo de órgano 🥷',
+        'transplant': 'un Trasplante de órganos 🔄',
+        'medical_error': 'un Intercambio de Cuerpos ☣️'
+    };
+
     // Verifica si la nueva configuración del cuerpo del jugador activa las condiciones de victoria
     const { checkBodyVictory } = await import('./state.js');
     // Busca si el cuerpo del jugador local cambió en este turno
@@ -314,6 +327,12 @@ async function finishTreatment(cardName, bodiesToUpdate) {
     let updateData = {
         [HAND_KEY]: tempHand,
         exileZone: tempExile,
+        lastPlay: {
+            playerKey: HAND_KEY,
+            cardType: `treatment_${cardName}`, 
+            targetPlay: `Provocó ${treatmentLabels[cardName] || 'un tratamiento'}`,
+            timestamp: Date.now()
+        },
         ...bodiesToUpdate
     };
 

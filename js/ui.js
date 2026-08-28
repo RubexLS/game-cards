@@ -129,7 +129,8 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
             // Renderizar el icono de Virus
             (currentViruses).forEach(v => { 
                 const virusToken = document.createElement('div');
-                virusToken.className = `token virus-token ${v.color}`; 
+                virusToken.className = `token virus-token ${v.color}`;
+                virusToken.style.backgroundImage = `url('../assets/icons/${v.color}_virus_icon.png')`; 
                 container.appendChild(virusToken); 
             });
 
@@ -137,6 +138,7 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
             (currentMedicines).forEach(m => {
                 const medToken = document.createElement('div');
                 medToken.className = `token medicine-token ${m.color}`; 
+                medToken.style.backgroundImage = `url('../assets/icons/${m.color}_medicine_icon.png')`;
                 container.appendChild(medToken); 
             });
 

@@ -43,8 +43,21 @@
 
         <section class="map-game">
             <!-- Mano del adversario -->
-            <div class="oponent-hand-cards">
-                <div class="hand" id="oponent-hand"></div>
+            <div class="panel-central-superior">
+                <!-- <div class="hand" id="oponent-hand"></div> -->
+                <!-- Lado Izquierdo: Información del juego -->
+                <div class="panel-info-turno">
+                    <div class="indicador-turno" id="info-turno-texto">TURNO DE: <span class="nombre-rival">RIVAL 1</span></div>
+
+                    <div class="historial-acciones" id="historial-lineas"></div>
+                </div>
+
+                <!-- Lado Derecho: Contenedor de la carta activa -->
+                <div class="panel-carta-activa">
+                    <div class="slot-carta-flotante" id="slot-carta-flotante">
+
+                    </div>
+                </div>
             </div>
 
             <!-- Sectores de la Mesa -->

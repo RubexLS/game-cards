@@ -58,25 +58,30 @@
 
     /* cuerpo del jugador local*/
     .bodyGame {
-        grid-row: 2 / 3 !important; 
-        display: flex !important;           /* Cambiamos de grid a flex para alineación horizontal directa */
-        flex-direction: row !important;     /* Fuerza una fila de izquierda a derecha */
-        justify-content: center !important; /* Centra los órganos en la pantalla */
-        align-items: center !important;
-        gap: 8px !important;                /* Espaciado compacto entre tus órganos */
+        grid-row: 2 / 3 !important;
+        display: grid !important;                     /* Cambiado de flex a grid */
+        grid-template-columns: repeat(3, 1fr) !important; /* Crea las 3 columnas */
+        justify-items: center !important;             /* Centra los iconos horizontalmente */
+        align-items: center !important;               /* Centra los iconos verticalmente */
+        gap: 12px !important;                         /* Un poco más de espacio entre filas/columnas */
         width: 100% !important;
         height: auto !important;
         padding: 5px 0 !important;
     }
 
     .bodyGame .organSlot {
-        flex: 1 !important;
         width: 100% !important;
-        max-width: 65px !important;        /* Tamaño optimizado para celulares */
-        max-height: 95px !important;
+        max-width: 68px !important;   /* Aumentado de 65px a 85px para que se vean más grandes */
         aspect-ratio: 5 / 7 !important;
         background-size: 100% 100% !important;
     }
+
+    #brain-slot    { grid-column: 1 / 2; grid-row: 1 / 2 }   
+    #heart-slot    { grid-column: 2 / 3; grid-row: 1 / 2 }
+    #stomach-slot  { grid-column: 3 / 4; grid-row: 1 / 2 }
+    #bone-slot     { grid-column: 1 / 2; grid-row: 2 / 3 }
+    #nervous-slot  { grid-column: 2 / 3; grid-row: 2 / 3 }
+    #bionic-slot   { grid-column: 3 / 4; grid-row: 2 / 3 }
 
     /* mano  */
     .player-hand-cards {
@@ -86,10 +91,6 @@
 
     .hand {
         gap: 4px;
-    }
-
-    .oponent-hand-cards {
-        height: 60px;
     }
 
     /* Reducción del abanico en móvil para evitar desbordes */

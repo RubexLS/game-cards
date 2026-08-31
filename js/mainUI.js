@@ -112,12 +112,14 @@ export function updateCentralActionPanel(gameState, localHandKey) {
 
         // 3. RENDER VISUAL DE LA CARTA FLOTANTE CON SU RUTA DE IMAGEN REAL
         if (cardSlot) {
+            const cleanCardName = cardType ? cardType.replace("treatment_", "") : "";
             // Importación dinámica limpia de la clase Cards de tu deck.js para extraer la imagen asignada
             import('./deck.js').then(({ Cards }) => {
-                const cleanCardName = cardType.replace("treatment_", "");
-                const originalCard = Cards.typeCards.find(c => c.name === cleanCardName);
+                const originalCard = (Cards && Cards.typeCards) 
+                    ? Cards.typeCards.find(c => c.name === cleanCardName) 
+                    : null;
 
-                if (originalCard) {
+                if (originalCard && originalCard.cardPhoto) {
                     cardSlot.innerHTML = `
                         <div class="carta-activa-preview" style="background-image: url('${originalCard.cardPhoto}'); background-size: 100% 100%; width: 65px; height: 95px; border: 3px solid #fff; border-radius: 4px; box-shadow: 0px 4px 0px rgba(0,0,0,0.5); position: relative; animation: floatAnim 2s ease-in-out infinite;">
                             <span style="font-size: 8px; font-weight: bold; text-align: center; color: #fff; font-family: monospace; background: rgba(0,0,0,0.7); padding: 2px 0; position: absolute; bottom: 0; left: 0; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -136,6 +138,8 @@ export function updateCentralActionPanel(gameState, localHandKey) {
                         </div>
                     `;
                 }
+            }).catch(err => {
+                console.error("Error cargando dinámicamente deck.js en el historial:", err);
             });
         }
     } else {

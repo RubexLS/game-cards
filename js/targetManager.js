@@ -49,13 +49,13 @@ export function initTargetListener() {
         const colorMap = { 'bone': 'yellow', 'brain': 'blue', 'heart': 'red', 'stomach': 'green', 'nervousSystem': 'rainbow' };
         const targetColor = colorMap[targetOrganName];
 
-        const isRainbowVirus = activeTargetingCard.color === 'rainbow';
+        const isRainbowCard = activeTargetingCard.color === 'rainbow';
         const isRainbowOrgan = targetOrganName === 'nervousSystem';
         // const colorsMatch = activeTargetingCard.name.includes(targetOrganName); 
         // Comparamos directamente las propiedades .color de la carta y del mapa
         const colorsMatch = activeTargetingCard.color === targetColor; 
 
-        if (!isRainbowVirus && !isRainbowOrgan && !colorsMatch) {
+        if (!isRainbowCard && !isRainbowOrgan && !colorsMatch) {
             cancelarJugada("¡No puedes aplicar esta carta en ese órgano! Los colores no coinciden.");
             return;
         }
@@ -133,7 +133,16 @@ export function initTargetListener() {
         // Verificación de seguridad: confirmamos que la carta sigue ahí antes de removerla
         // Si el índice cambió por lag, busca su nueva posición exacta
         const idx = tempHand.findIndex(c => c.name === activeTargetingCard.name);
-        if (idx !== -1) tempHand.splice(idx, 1);
+        if (idx !== -1) {
+            tempHand.splice(idx, 1);
+        } else {
+            // Si por lag del servidor no la encuentra con el nombre exacto, usamos el índice de respaldo que guardamos en useCard
+            if (activeTargetingCard.index !== undefined && tempHand[activeTargetingCard.index]) {
+                tempHand.splice(activeTargetingCard.index, 1);
+            }
+        }
+
+        const cardPlayedName = activeTargetingCard.name;
 
         // Limpiar el modo objetivo
         setActiveTargetingCard(null);
@@ -158,7 +167,7 @@ export function initTargetListener() {
             exileZone: tempExile,
             lastPlay: {
                 playerKey: HAND_KEY,
-                cardType: activeTargetingCard.name, // ej: 'blue_virus', 'red_medicine'
+                cardType: cardPlayedName, // ej: 'blue_virus', 'red_medicine'
                 targetPlay: textoObjetivo,
                 timestamp: Date.now()
             }

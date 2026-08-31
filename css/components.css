@@ -177,11 +177,15 @@
     border-radius: 4px;
     padding: 6px 8px;
     height: 52px;
-    overflow-y: hidden;
+    overflow-y: auto;
     display: flex;
     flex-direction: column-reverse; /* Hace que lo nuevo aparezca arriba empujando lo viejo */
-    justify-content: flex-end;
     box-sizing: border-box;
+}
+
+.historial-acciones > * {
+  flex-shrink: 0; /* Evita estrictamente que Flexbox aplaste las líneas */
+  min-height: min-content; /* Asegura que mantengan su altura natural */
 }
 
 /* Líneas de texto individuales dentro del historial */

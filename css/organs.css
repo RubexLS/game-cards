@@ -15,6 +15,10 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.organSlot.player{
+    aspect-ratio: 2 / 3;
+}
+
 /* --- DISEÑO DEL ÓRGANO INSTANCIADO --- */
 .organ {
     width: 100%;
@@ -46,12 +50,12 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); 
 }
 
-#brain-slot    { grid-column: 1 / 2; grid-row: 1 / 2; background-image: url(../assets/board/brain_slot.png); }   
-#heart-slot    { grid-column: 2 / 3; grid-row: 1 / 2; background-image: url(../assets/board/heart_slot.png); }
-#stomach-slot  { grid-column: 1 / 2; grid-row: 2 / 3; background-image: url(../assets/board/stomach_slot.png); }
-#bone-slot     { grid-column: 2 / 3; grid-row: 2 / 3; background-image: url(../assets/board/bone_slot.png); }
-#nervous-slot  { grid-column: 1 / 2; grid-row: 3 / 4; background-image: url(../assets/board/nervous_system.png); }
-#bionic-slot   { grid-column: 2 / 3; grid-row: 3 / 4; background-image: url(../assets/board/arm_slot.png); }
+#brain-slot    { grid-column: 1 / 2; grid-row: 1 / 2; background-image: url(../assets/board/brain_slot.png); height: 100%; width: 100%; }   
+#heart-slot    { grid-column: 2 / 3; grid-row: 1 / 2; background-image: url(../assets/board/heart_slot.png); height: 100%; width: 100%; }
+#stomach-slot  { grid-column: 1 / 2; grid-row: 2 / 3; background-image: url(../assets/board/stomach_slot.png); height: 100%; width: 100%; }
+#bone-slot     { grid-column: 2 / 3; grid-row: 2 / 3; background-image: url(../assets/board/bone_slot.png); height: 100%; width: 100%; }
+#nervous-slot  { grid-column: 1 / 2; grid-row: 3 / 4; background-image: url(../assets/board/nervous_system.png); height: 100%; width: 100%; }
+#bionic-slot   { grid-column: 2 / 3; grid-row: 3 / 4; background-image: url(../assets/board/arm_slot.png); height: 100%; width: 100%; }
 
 /* --- FILAS DE LOS CONTENDORES DE LOS RIVALES --- */
 .rivalOne   { grid-row: 1 / 2; background-color: rgba(30, 14, 206, 0.2); }
@@ -76,12 +80,12 @@
 .bodyPlayers .organSlot { background-color: rgba(0, 0, 0, 0.6); }
 
 /* MAPEO DE RIVALES*/
-[id^="brain-slot-rival"]   { grid-column: 1 / 2; background-image: url(../assets/board/brain_slot.png); }
-[id^="heart-slot-rival"]   { grid-column: 2 / 3; background-image: url(../assets/board/heart_slot.png); }
-[id^="stomach-slot-rival"] { grid-column: 3 / 4; background-image: url(../assets/board/stomach_slot.png); }
-[id^="bone-slot-rival"]    { grid-column: 4 / 5; background-image: url(../assets/board/bone_slot.png); }
-[id^="nervous-slot-rival"] { grid-column: 5 / 6; background-image: url(../assets/board/nervous_system.png); }
-[id^="bionic-slot-rival"]  { grid-column: 6 / 7; background-image: url(../assets/board/arm_slot.png); }
+[id^="brain-slot-rival"]   { grid-column: 1 / 2; background-image: url(../assets/board/brain_slot.png); height: 100%; width: 100%; }
+[id^="heart-slot-rival"]   { grid-column: 2 / 3; background-image: url(../assets/board/heart_slot.png); height: 100%; width: 100%; }
+[id^="stomach-slot-rival"] { grid-column: 3 / 4; background-image: url(../assets/board/stomach_slot.png); height: 100%; width: 100%; }
+[id^="bone-slot-rival"]    { grid-column: 4 / 5; background-image: url(../assets/board/bone_slot.png); height: 100%; width: 100%; }
+[id^="nervous-slot-rival"] { grid-column: 5 / 6; background-image: url(../assets/board/nervous_system.png); height: 100%; width: 100%; }
+[id^="bionic-slot-rival"]  { grid-column: 6 / 7; background-image: url(../assets/board/arm_slot.png); height: 100%; width: 100%; }
 
 /* --- CUERPO LOCAL --- */
 .bodyGame {

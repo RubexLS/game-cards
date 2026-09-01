@@ -61,6 +61,7 @@
         grid-row: 2 / 3 !important;
         display: grid !important;                     /* Cambiado de flex a grid */
         grid-template-columns: repeat(3, 1fr) !important; /* Crea las 3 columnas */
+        grid-template-rows: repeat(2, 1fr) !important;
         justify-items: center !important;             /* Centra los iconos horizontalmente */
         align-items: center !important;               /* Centra los iconos verticalmente */
         gap: 12px !important;                         /* Un poco más de espacio entre filas/columnas */

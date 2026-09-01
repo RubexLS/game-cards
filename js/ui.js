@@ -152,7 +152,7 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
         }
     });
     Object.values(slotsHTML).forEach(s => { 
-        if (s && s.children.length === 0) s.innerText = 'Vacío'; 
+        if (s && s.children.length === 0) s.innerText = ''; 
     });
 }
 
@@ -183,7 +183,7 @@ export function renderBody() {
 
     // Limpia todos los contenedores del DOM de rivales por seguridad (evita fantasmas de partidas anteriores)
     slotsRivalsDOM.forEach(s => {
-        Object.values(s).forEach(d => { if (d) d.innerHTML = 'Vacío'; })
+        Object.values(s).forEach(d => { if (d) d.innerHTML = ''; })
     });
     // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
     rotated.forEach((key, index) => { 

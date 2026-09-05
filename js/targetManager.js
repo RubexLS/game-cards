@@ -5,7 +5,6 @@ import { handTemp } from './domElements.js';
 import { activeTargetingCard, setActiveTargetingCard } from './gameActions.js';
 
 export function initTargetListener() {
-    // Escuchamos los clics en todo el documento para atrapar los clics en los órganos
     document.addEventListener('click', async (event) => {
         if (!activeTargetingCard) return;
 
@@ -42,7 +41,6 @@ export function initTargetListener() {
             const bodyGameElem = document.querySelector('.bodyGame');
             if (bodyGameElem) bodyGameElem.style.cursor = 'default';
 
-            // import('./state.js').then(s => s.passTurn());
             renderHand();
         };
 
@@ -167,19 +165,18 @@ export function initTargetListener() {
             exileZone: tempExile,
             lastPlay: {
                 playerKey: HAND_KEY,
-                cardType: cardPlayedName, // ej: 'blue_virus', 'red_medicine'
+                cardType: cardPlayedName,
                 targetPlay: textoObjetivo,
                 timestamp: Date.now()
             }
         };
         
-        // Si la acción completó la victoria (por ejemplo sanando el 4to órgano), cierra el juego en el mismo paquete
+        // si una accion activo la victoria, como sanar un organo.
         if (hasWon) { 
             updateData.state = "finalizado"; 
             updateData.winner = targetBodyKey; 
         }
         
-        // Guardado síncrono e irreversible en Firebase
         await firebaseMock.updateGame(GAME_ID, updateData);
     });
 }

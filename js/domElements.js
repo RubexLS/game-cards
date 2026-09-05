@@ -44,3 +44,10 @@ export const slotsRivalsDOM = [
         nervous: document.getElementById('nervous-slot-rivalFour')
     }
 ];
+
+export const bodyRivalsContainers = [
+    document.getElementById('bodyRivalOne'),
+    document.getElementById('bodyRivalTwo'),
+    document.getElementById('bodyRivalThree'),
+    document.getElementById('bodyRivalFour')
+];

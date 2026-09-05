@@ -62,3 +62,29 @@
     bottom: 6%;
     left: 52%;
 }
+
+/* Clase que se aplica al contenedor del rival ausente */
+.rival-blocked {
+    position: relative;
+    pointer-events: none; /* Evita que se pueda hacer click en los slots ocultos */
+}
+
+/* Capa con la imagen de bloqueo superpuesta automáticamente */
+.rival-blocked::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/board/absent.png'); /* Tu diseño aquí */
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 10;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

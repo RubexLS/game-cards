@@ -2,7 +2,7 @@ import { gameState, HAND_KEY, getStatus, BODY_KEY } from './state.js';
 import { usedCardsTurn, recordUsage } from './state.js';
 import { inDrawPhase } from './state.js';
 import { useCard, exileCard, drawCard } from './gameActions.js';
-import { handTemp, deckElement, deckCountElement, exileSlot, options, organBrain, organHeart, organStomach, organBone, organNervous, slotsRivalsDOM } from './domElements.js';
+import { handTemp, deckElement, deckCountElement, exileSlot, options, organBrain, organHeart, organStomach, organBone, organNervous, slotsRivalsDOM, bodyRivalsContainers } from './domElements.js';
 
 //Renderizado de la mano del jugador y control de las acciones con las cartas de la misma
 export function renderHandPlayer(currentPLayer, contenedorHTML) {
@@ -186,10 +186,28 @@ export function renderBody() {
         Object.values(s).forEach(d => { if (d) d.innerHTML = ''; })
     });
     // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
-    rotated.forEach((key, index) => { 
-        const slotDestiny = slotsRivalsDOM[index];
-        if (slotDestiny) {
-            renderBodyBoard(key, slotDestiny);
+    // rotated.forEach((key, index) => { 
+    //     const slotDestiny = slotsRivalsDOM[index];
+    //     if (slotDestiny) {
+    //         renderBodyBoard(key, slotDestiny);
+    //     }
+    // });
+    bodyRivalsContainers.forEach((container, idx) => {
+        if (!container) return;
+
+        const rivalBodyKey = rotated[idx];
+
+        if (rivalBodyKey) {
+            // JUGADOR PRESENTE: Quitamos la clase de bloqueo y renderizamos
+            container.classList.remove('rival-blocked');
+            
+            const slotDestiny = slotsRivalsDOM[idx];
+            if (slotDestiny) {
+                renderBodyBoard(rivalBodyKey, slotDestiny);
+            }
+        } else {
+            // JUGADOR AUSENTE: Encendemos la clase de CSS
+            container.classList.add('rival-blocked');
         }
     });
 }
@@ -198,17 +216,3 @@ export function renderBody() {
 if (deckElement) {
     deckElement.addEventListener('click', drawCard);
 }
-
-// solo para online
-// export function rolRecovery() {
-//     const rolSaved = localStorage.getItem(`rol_${GAME_ID}`);
-//     if (rolSaved && MAP_ROL[rolSaved]) {
-//         MI_ROL = rolSaved;
-//         HAND_KEY = MAP_ROL[rolSaved].mano;
-//         BODY_KEY = MAP_ROL[rolSaved].cuerpo;
-//         console.log(`🔄 Rol recuperado automáticamente: ${HAND_KEY}`);
-//         return rolSaved;
-//     }
-//     return null;
-// }
-

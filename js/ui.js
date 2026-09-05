@@ -186,12 +186,6 @@ export function renderBody() {
         Object.values(s).forEach(d => { if (d) d.innerHTML = ''; })
     });
     // Mapea a los 4 oponentes en los 4 contenedores relativos del DOM
-    // rotated.forEach((key, index) => { 
-    //     const slotDestiny = slotsRivalsDOM[index];
-    //     if (slotDestiny) {
-    //         renderBodyBoard(key, slotDestiny);
-    //     }
-    // });
     bodyRivalsContainers.forEach((container, idx) => {
         if (!container) return;
 

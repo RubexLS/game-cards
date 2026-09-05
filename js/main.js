@@ -102,3 +102,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+const btnCreateRoom = document.getElementById("btn-ir-sala");
+const inputNameRoom = document.getElementById("input-sala-nombre");
+
+if (btnCreateRoom && inputNameRoom) {
+    btnCreateRoom.addEventListener("click", () => {
+        const cleanName = inputNameRoom.value.trim().replace(/[^a-zA-Z0-9]/g, "_");
+        if (cleanName.length > 0) {
+            // Recarga la página enviando al jugador a la nueva sala en paralelo
+            window.location.search = `?sala=${cleanName}`;
+        } else {
+            alert("Por favor, introduce un nombre de sala válido.");
+        }
+    });
+}

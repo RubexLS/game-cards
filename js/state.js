@@ -1,4 +1,18 @@
-export const GAME_ID = 'game_001';
+// Captura el parámetro ?sala= de la URL. Si no existe, genera uno aleatorio (ej: sala_x8f2)
+const urlParams = new URLSearchParams(window.location.search);
+let roomParam = urlParams.get('sala');
+
+if (!roomParam) {
+    roomParam = 'sala_' + Math.random().toString(36).substring(2, 6);
+    // Redirecciona automáticamente para que la URL contenga el ID y se pueda compartir
+    urlParams.set('sala', roomParam);
+    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+}
+
+// Exportamos el ID dinámico que usarán todos los demás módulos
+export const GAME_ID = roomParam;
+
+// export const GAME_ID = 'game_001';
 
 // objeto exportado para mantener la referencia online
 export let gameState = {

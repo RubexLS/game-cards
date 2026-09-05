@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const contenido = `import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "${process.env.FIREBASE_API_KEY || ''}",
@@ -16,12 +16,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function gameRefId(id) { return id || "game_001"; }
-
 export const firebaseMock = {
     getGame: async (gameId) => {
         try {
-            const gameRef = doc(db, "games", gameRefId(gameId));
+            const gameRef = doc(db, "games", gameId);
             const docSnap = await getDoc(gameRef);
             if (docSnap.exists()) {
                 return docSnap.data();
@@ -36,17 +34,19 @@ export const firebaseMock = {
     },
     updateGame: async (gameId, newData) => {
         try {
-            const gameRef = doc(db, "games", gameRefId(gameId));
-            await updateDoc(gameRef, newData);
+            const gameRef = doc(db, "games", gameId);
+            await setDoc(gameRef, newData, { merge: true });
         } catch (error) {
             console.error("Error al actualizar partida en Firebase:", error);
         }
     },
     listenMatch: (gameId, callback) => {
-        const gameRef = doc(db, "games", gameRefId(gameId));
+        const gameRef = doc(db, "games", gameId);
         return onSnapshot(gameRef, (snapshot) => {
             if (snapshot.exists()) {
                 callback(snapshot.data());
+            }else{
+                callback({ state: "esperando", unavailablePlayers: [] });
             }
         });
     }

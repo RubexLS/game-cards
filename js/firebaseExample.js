@@ -16,13 +16,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Función interna auxiliar para asegurar el uso de ID correcto de documento
-function gameRefId(id) { return id || "game_001"; }
-
 export const firebaseMock = {
     getGame: async (gameId) => {
         try {
-            const gameRef = doc(db, "games", gameRefId(gameId));
+            const gameRef = doc(db, "games", gameId);
             const docSnap = await getDoc(gameRef);
             if (docSnap.exists()) {
                 return docSnap.data();
@@ -39,8 +36,8 @@ export const firebaseMock = {
     // Actualiza los campos en tiempo real en la nube de Firebase
     updateGame: async (gameId, newData) => {
         try {
-            const gameRef = doc(db, "games", gameRefId(gameId));
-            await updateDoc(gameRef, newData);
+            const gameRef = doc(db, "games", gameId);
+            await setDoc(gameRef, newData, { merge: true });
         } catch (error) {
             console.error("Error al actualizar partida en Firebase:", error);
         }
@@ -49,10 +46,13 @@ export const firebaseMock = {
 
     // Herramienta extra: Escucha cambios en tiempo real sin recargar la página
     listenMatch: (gameId, callback) => {
-        const gameRef = doc(db, "games", gameRefId(gameId));
+        const gameRef = doc(db, "games", gameId);
         return onSnapshot(gameRef, (snapshot) => {
             if (snapshot.exists()) {
                 callback(snapshot.data());
+            }else{
+                // Si la sala se está escuchando pero está completamente vacía (recién creada)
+                callback({ state: "esperando", unavailablePlayers: [] });
             }
         });
     }

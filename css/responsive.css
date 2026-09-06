@@ -156,4 +156,19 @@
     .rivalThree .organSlot, .rivalFour .organSlot {
         max-width: 45px; 
     }
+
+    /* reajuste de avatars */
+
+    .selectPlayer{
+        height: 250px;
+        width: 85%;
+    }
+
+    .orange,
+    .blue,
+    .red,
+    .yellow,
+    .green{
+        background-size: 100% 100%;
+    }
 }

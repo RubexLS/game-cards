@@ -65,7 +65,8 @@ export async function syncDataBase(gameData) {
         deck: gameData.deck || [], 
         turn: gameData.turn, 
         exileZone: gameData.exileZone || [],
-        lastPlay: gameData.lastPlay || null
+        lastPlay: gameData.lastPlay || null,
+        playerNames: gameData.playerNames || {}
     };
 
     // control

@@ -4,6 +4,14 @@ import { inDrawPhase } from './state.js';
 import { useCard, exileCard, drawCard } from './gameActions.js';
 import { handTemp, deckElement, deckCountElement, exileSlot, options, organBrain, organHeart, organStomach, organBone, organNervous, slotsRivalsDOM, bodyRivalsContainers } from './domElements.js';
 
+const REVERSE_MAP_ROL = {
+    'bodyOrange': 'playerO',
+    'bodyBlue': 'playerB',
+    'bodyRed': 'playerR',
+    'bodyYellow': 'playerY',
+    'bodyGreen': 'playerG'
+};
+
 //Renderizado de la mano del jugador y control de las acciones con las cartas de la misma
 export function renderHandPlayer(currentPLayer, contenedorHTML) {
     if (!contenedorHTML) return;
@@ -42,8 +50,6 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             });
             btnUse.addEventListener('click', async () => { 
                 if (!enabled) return; // multiples clicks
-                // recordUsage(); // Bloquea la acción de "Usar" por el resto del turno
-                // btnUse.disabled = true; 
                 options.innerHTML = ''; 
                 await useCard(index); 
             });
@@ -142,7 +148,6 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
                 container.appendChild(medToken); 
             });
 
-            // Si tiene 2 vacunas o más, añade la clase de inmunidad al órgano
             if ((currentMedicines).length >= 2) {
                 div.classList.add('is-immune');
             }
@@ -166,6 +171,12 @@ export function renderBody() {
         bone: organBone, 
         nervous: organNervous 
     });
+
+    // OPTIONAL: Si tienes un elemento de título en tu HTML para tu propio tablero, actualízalo:
+    // const myButtonId = REVERSE_MAP_ROL[BODY_KEY];
+    // const myName = gameState.playerNames?.[myButtonId] || "Tú";
+    // const myTitleArea = document.getElementById("mi-tablero-titulo"); 
+    // if (myTitleArea) myTitleArea.innerText = `Cuerpo de: ${myName}`;
 
     // Rota y dibuja los cuerpos de los rivales
     if (!BODY_KEY) return;
@@ -192,16 +203,31 @@ export function renderBody() {
         const rivalBodyKey = rotated[idx];
 
         if (rivalBodyKey) {
-            // JUGADOR PRESENTE: Quitamos la clase de bloqueo y renderizamos
             container.classList.remove('rival-blocked');
+
+            // Busca el ID del botón usando el rivalBodyKey (ej: 'bodyBlue' -> 'playerB')
+            const rivalButtonId = REVERSE_MAP_ROL[rivalBodyKey];
+            const rivalName = gameState.playerNames?.[rivalButtonId] || "Rival";
+
+            // Buscamos o creamos una etiqueta de texto dentro del contenedor del rival para el nombre
+            let nameTag = container.querySelector('.rival-nickname-tag');
+            if (!nameTag) {
+                nameTag = document.createElement('h3');
+                nameTag.className = 'rival-nickname-tag';
+                nameTag.style.cssText = "color: white; text-align: center; margin: 5px 0; font-family: monospace;";
+                container.insertBefore(nameTag, container.firstChild); // Lo pone arriba del todo del panel del rival
+            }
+            nameTag.innerText = rivalName;
             
             const slotDestiny = slotsRivalsDOM[idx];
             if (slotDestiny) {
                 renderBodyBoard(rivalBodyKey, slotDestiny);
             }
         } else {
-            // JUGADOR AUSENTE: Encendemos la clase de CSS
             container.classList.add('rival-blocked');
+            // Si el slot está bloqueado/vacío, removemos la etiqueta de nombre si existía
+            const nameTag = container.querySelector('.rival-nickname-tag');
+            if (nameTag) nameTag.remove();
         }
     });
 }

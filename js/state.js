@@ -20,6 +20,7 @@ export let gameState = {
     exileZone: [], 
     turn: "playerOrange", 
     activePlayers: [],
+    playerNames: {},
     playerOrange: [], playerBlue: [], playerRed: [], playerYellow: [], playerGreen: [],
     bodyOrange: [], bodyBlue: [], bodyRed: [], bodyYellow: [], bodyGreen: []
 };

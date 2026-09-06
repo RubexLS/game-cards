@@ -37,9 +37,17 @@ firebaseMock.listenMatch(GAME_ID, (gameData) => {
     renderAvatarSelection(notAvailable, preliminarySelection);
 });
 
+const inputPlayerName = document.getElementById('input-player-name');
+
 async function processCharacterBlock(currentSelection) {
+    // Captura el nombre ingresado o asignar uno por defecto si está vacío
+    const rawName = inputPlayerName ? inputPlayerName.value.trim() : "";
+    const cleanNickname = rawName.length > 0 ? rawName : `Jugador_${currentSelection.id}`;
+
     const gameData = await firebaseMock.getGame(GAME_ID);
     let notAvailable = gameData?.unavailablePlayers ? gameData.unavailablePlayers : [];
+    // Recupera nombres existentes en la base de datos o inicializar objeto vacío
+    let currentNames = gameData?.playerNames ? gameData.playerNames : {};
 
     //evita las selecciones simultaneas de un personaje
     if (notAvailable.includes(currentSelection.id)) {
@@ -49,15 +57,21 @@ async function processCharacterBlock(currentSelection) {
 
     if (preliminarySelection) {
         notAvailable = notAvailable.filter(id => id !== preliminarySelection.id);
+        // Limpiar el nombre anterior si cambia de personaje antes de iniciar
+        delete currentNames[preliminarySelection.id];
     }
 
     preliminarySelection = currentSelection; 
     notAvailable.push(currentSelection.id);
 
+    // Guardar el nombre asociado al ID del botón ('playerO', 'playerB', etc.)
+    currentNames[currentSelection.id] = cleanNickname;
+
     assignPlayer(currentSelection.id);
 
     await firebaseMock.updateGame(GAME_ID, { 
-        unavailablePlayers: notAvailable 
+        unavailablePlayers: notAvailable,
+        playerNames: currentNames 
     });
 }
 

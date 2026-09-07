@@ -2,7 +2,7 @@ import { gameState, HAND_KEY, getStatus, BODY_KEY } from './state.js';
 import { usedCardsTurn, recordUsage } from './state.js';
 import { inDrawPhase } from './state.js';
 import { useCard, exileCard, drawCard } from './gameActions.js';
-import { handTemp, deckElement, deckCountElement, exileSlot, options, organBrain, organHeart, organStomach, organBone, organNervous, slotsRivalsDOM, bodyRivalsContainers } from './domElements.js';
+import { handTemp, deckElement, deckCountElement, discartSlot, options, organBrain, organHeart, organStomach, organBone, organNervous, slotsRivalsDOM, bodyRivalsContainers } from './domElements.js';
 
 const REVERSE_MAP_ROL = {
     'bodyOrange': 'playerO',
@@ -74,26 +74,25 @@ export function renderHand(keyword) {
 
 // renderizado y actualizado de los slots del tablero
 export function renderBoard(cardImage) {
-    if (!deckCountElement || !deckElement || !exileSlot) return;
+    if (!deckCountElement || !deckElement || !discartSlot) return;
     deckCountElement.innerText = gameState.deck.length;
     if (gameState.deck.length === 0) { 
         deckElement.style.backgroundColor = '#7f8c8d'; 
         deckElement.innerText = 'Vacío'; 
     } else { 
-        deckElement.style.backgroundColor = ''; 
-        deckElement.innerText = ''; 
+        deckElement.innerText = gameState.deck.length; 
     }
 
     if (gameState.exileZone?.length > 0) {
         const lastCard = gameState.exileZone[gameState.exileZone.length - 1];
-        exileSlot.className = 'card'; 
-        exileSlot.innerText = '';
-        exileSlot.style.backgroundImage = `url('${lastCard}')`;
-        exileSlot.style.backgroundSize = "cover";
+        discartSlot.className = 'card'; 
+        discartSlot.innerText = '';
+        discartSlot.style.backgroundImage = `url('${lastCard}')`;
+        discartSlot.style.backgroundSize = "cover";
     } else { 
-        exileSlot.className = 'card-slot'; 
-        exileSlot.innerText = 'Vacío'; 
-        exileSlot.style.backgroundImage = ''; }
+        discartSlot.className = 'card-slot'; 
+        discartSlot.innerText = 'Vacío'; 
+        discartSlot.style.backgroundImage = ''; }
 }
 
 // Renderizado del cuerpo del jugador y sus rivales
@@ -140,16 +139,21 @@ export function renderBodyBoard (bodyKey, slotsHTML) {
                 container.appendChild(virusToken); 
             });
 
-            // Renderiza el icono de Medicina
-            (currentMedicines).forEach(m => {
-                const medToken = document.createElement('div');
-                medToken.className = `token medicine-token ${m.color}`; 
-                medToken.style.backgroundImage = `url('../assets/icons/${m.color}_medicine_icon.png')`;
-                container.appendChild(medToken); 
-            });
-
-            if ((currentMedicines).length >= 2) {
+            // renderiza medicinas e iconos
+            if(currentMedicines.length >= 2) {
                 div.classList.add('is-immune');
+
+                const immuneToken = document.createElement('div');
+                immuneToken.className = `token immunity-token`;
+                immuneToken.style.backgroundImage = `url('../assets/icons/inmune.png')`;
+                container.appendChild(immuneToken);
+            }else{
+                (currentMedicines).forEach(m => {
+                    const medToken = document.createElement('div');
+                    medToken.className = `token medicine-token ${m.color}`; 
+                    medToken.style.backgroundImage = `url('../assets/icons/${m.color}_medicine_icon.png')`;
+                    container.appendChild(medToken); 
+                });
             }
 
             // inyecta los iconos dentro del órgano antes de agregarlo al slot
@@ -172,11 +176,11 @@ export function renderBody() {
         nervous: organNervous 
     });
 
-    // OPTIONAL: Si tienes un elemento de título en tu HTML para tu propio tablero, actualízalo:
-    // const myButtonId = REVERSE_MAP_ROL[BODY_KEY];
-    // const myName = gameState.playerNames?.[myButtonId] || "Tú";
-    // const myTitleArea = document.getElementById("mi-tablero-titulo"); 
-    // if (myTitleArea) myTitleArea.innerText = `Cuerpo de: ${myName}`;
+    // encabezado del cuerpo del jugador
+    const myButtonId = REVERSE_MAP_ROL[BODY_KEY];
+    const myName = gameState.playerNames?.[myButtonId] || "Tú";
+    const myTitleArea = document.getElementById("body-title"); 
+    if (myTitleArea) myTitleArea.innerText = `Cuerpo de: ${myName}`;
 
     // Rota y dibuja los cuerpos de los rivales
     if (!BODY_KEY) return;

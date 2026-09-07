@@ -24,7 +24,7 @@
                 <button id="playerY" class="select yellow"></button>
                 <button id="playerG" class="select green"></button>
             </div>
-            <input type="text" id="input-player-name" placeholder="Tu Nickname..." maxLength="12">
+            <input type="text" id="nickname" placeholder="Tu Nickname..." maxLength="12">
             <button id="play">Jugar!</button>
             <button>Options</button>
             <button>credits</button>
@@ -33,49 +33,44 @@
     
 
     <main class="game-container" id="viewMap" style="display: none;">
-        <section class="bodyGame">
-                <div id="brain-slot" class="organSlot player"></div>
-                <div id="heart-slot" class="organSlot player"></div>
-                <div id="stomach-slot" class="organSlot player"></div>
-                <div id="bone-slot" class="organSlot player"></div>
-                <div id="nervous-slot" class="organSlot player"></div>
-                <div id="bionic-slot" class="organSlot player"></div>
+        <section class="container-body">
+            <h2 id="body-title"></h2>
+            <div class="bodyGame">
+                    <div id="brain-slot" class="organSlot player"></div>
+                    <div id="heart-slot" class="organSlot player"></div>
+                    <div id="stomach-slot" class="organSlot player"></div>
+                    <div id="bone-slot" class="organSlot player"></div>
+                    <div id="nervous-slot" class="organSlot player"></div>
+                    <div id="bionic-slot" class="organSlot player"></div>
+            </div>
         </section>
 
         <section class="map-game">
-            <!-- Mano del adversario -->
             <div class="panel-central-superior">
-                <!-- <div class="hand" id="oponent-hand"></div> -->
-                <!-- Lado Izquierdo: Información del juego -->
                 <div class="panel-info-turno">
                     <div class="indicador-turno" id="info-turno-texto">TURNO DE: <span class="nombre-rival">RIVAL 1</span></div>
-
                     <div class="historial-acciones" id="historial-lineas"></div>
                 </div>
 
-                <!-- Lado Derecho: Contenedor de la carta activa -->
                 <div class="panel-carta-activa">
-                    <div class="slot-carta-flotante" id="slot-carta-flotante">
-
-                    </div>
+                    <div class="slot-carta-flotante" id="slot-carta-flotante"></div>
                 </div>
             </div>
 
-            <!-- Sectores de la Mesa -->
             <div class="board">
                 <div class="zone" id="deck-zone">
-                    <h2>Mazo</h2>
-                    <div class="card deck" id="deck">🎴<br><span id="deck-count">68</span></div>
+                    <h2>DECK</h2>
+                    <div class="card deck" id="deck"><br><span id="deck-count"></span></div>
                 </div>
             
                 <div class="zone" id="exile-zone">
-                    <h2>Destierro</h2>
+                    <h2>VANISH</h2>
                     <div class="card-slot" id="exile-slot"></div>
                 </div>
             
-                <div class="zone" id="discard-zone">
-                    <h2>Descarte</h2>
-                    <div class="card-slot" id="discard-slot">Vacio</div>
+                <div class="zone" id="discart-zone">
+                    <h2>DISCART</h2>
+                    <div class="card-slot" id="discart-slot">Vacio</div>
                 </div>
             </div>
 

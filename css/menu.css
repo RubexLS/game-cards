@@ -67,3 +67,13 @@
 .menu button:hover {
     color: rgb(9, 239, 101);
 }
+
+input{
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 2px solid #ffffff;
+    color: #000000;
+    font-size: 30px;
+    text-align: center;
+    width: 250px;
+    border-radius: 10px;
+}

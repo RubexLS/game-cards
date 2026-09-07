@@ -6,7 +6,7 @@ export const avatarButtons = document.querySelectorAll('.select');
 export const handTemp = document.getElementById('player-hand');
 export const deckElement = document.getElementById('deck');
 export const deckCountElement = document.getElementById('deck-count');
-export const exileSlot = document.getElementById('exile-slot');
+export const discartSlot = document.getElementById('discart-slot');
 
 export const organBrain = document.getElementById('brain-slot');
 export const organHeart = document.getElementById('heart-slot');

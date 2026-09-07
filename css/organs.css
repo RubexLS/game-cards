@@ -87,16 +87,6 @@
 [id^="nervous-slot-rival"] { grid-column: 5 / 6; background-image: url(../assets/board/nervous_system.png); height: 100%; width: 100%; }
 [id^="bionic-slot-rival"]  { grid-column: 6 / 7; background-image: url(../assets/board/arm_slot.png); height: 100%; width: 100%; }
 
-/* --- CUERPO LOCAL --- */
-.bodyGame {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 10px;
-    align-items: center;
-    justify-items: center;
-}
-
 /* --- CONTENEDOR DE JUGADORES RIVALES --- */
 .bodyRivals {
     width: 100%;

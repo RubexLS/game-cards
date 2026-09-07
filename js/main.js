@@ -37,7 +37,7 @@ firebaseMock.listenMatch(GAME_ID, (gameData) => {
     renderAvatarSelection(notAvailable, preliminarySelection);
 });
 
-const inputPlayerName = document.getElementById('input-player-name');
+const inputPlayerName = document.getElementById('nickname');
 
 async function processCharacterBlock(currentSelection) {
     // Captura el nombre ingresado o asignar uno por defecto si está vacío

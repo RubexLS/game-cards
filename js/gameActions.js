@@ -11,13 +11,45 @@ export function setActiveTargetingCard(val) {
 export async function drawCard() {
     // Bloquear si no es mi turno
     if (!getStatus()) { alert("No es tu turno para robar."); return; }
-    if (gameState.deck.length === 0) { alert("¡No quedan cartas!"); return; }
 
     // Clon de los arrays para no mutar el estado local de forma intermitente
-    const tempDeck = [...gameState.deck];
+    let tempDeck = [...gameState.deck];
+    let tempExile = [...(gameState.exileZone || [])];
     const tempHand = [...gameState[HAND_KEY]];
     if (tempHand.length >= 3) { alert("Tu mano está llena."); return; }
     
+    // REGLA DE RECICLAJE
+    if (tempDeck.length === 0) {
+        if (tempExile.length === 0) {
+            alert("¡No quedan cartas en el mazo ni en el descarte!"); 
+            return; 
+        }
+
+        alert("♻️ ¡El mazo se ha agotado! Barajando la pila de descartes para crear un mazo nuevo...");
+
+        const { Cards } = await import('./deck.js');
+        
+        let recycledCards = tempExile.map(photoPath => {
+            // Busca la carta original en el catálogo general del deck
+            const original = Cards.typeCards.find(c => c.cardPhoto === photoPath);
+            return original ? {
+                name: original.name,
+                cardPhoto: original.cardPhoto,
+                type: original.type,
+                color: original.color
+            } : null;
+        }).filter(c => c !== null); // Limpia nulos por seguridad
+
+        for (let i = recycledCards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [recycledCards[i], recycledCards[j]] = [recycledCards[j], recycledCards[i]];
+        }
+
+        // El descarte pasa a ser el mazo, y la zona de exilio/descarte se vacía
+        tempDeck = recycledCards;
+        tempExile = [];
+    }
+
     // Al primer click en el mazo, se activa el candado: No más usar ni descartar
     if (!inDrawPhase) { startDrawPhase(); }
 
@@ -28,6 +60,7 @@ export async function drawCard() {
     // paquete de actualización para Firebase
     let updateData = {
         deck: tempDeck,
+        exileZone: tempExile,
         [HAND_KEY]: tempHand
     };
 

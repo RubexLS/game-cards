@@ -80,6 +80,7 @@ export function renderBoard(cardImage) {
         deckElement.style.backgroundColor = '#7f8c8d'; 
         deckElement.innerText = 'Vacío'; 
     } else { 
+        deckElement.style.backgroundColor = '#c0392b';
         deckElement.innerText = gameState.deck.length; 
     }
 
@@ -206,8 +207,10 @@ export function renderBody() {
 
         const rivalBodyKey = rotated[idx];
 
+        container.classList.remove('bodyOrange', 'bodyBlue', 'bodyRed', 'bodyYellow', 'bodyGreen', 'rival-blocked');
+
         if (rivalBodyKey) {
-            container.classList.remove('rival-blocked');
+            container.classList.add(rivalBodyKey); 
 
             // Busca el ID del botón usando el rivalBodyKey (ej: 'bodyBlue' -> 'playerB')
             const rivalButtonId = REVERSE_MAP_ROL[rivalBodyKey];
@@ -218,7 +221,6 @@ export function renderBody() {
             if (!nameTag) {
                 nameTag = document.createElement('h3');
                 nameTag.className = 'rival-nickname-tag';
-                nameTag.style.cssText = "color: white; text-align: center; margin: 5px 0; font-family: monospace;";
                 container.insertBefore(nameTag, container.firstChild); // Lo pone arriba del todo del panel del rival
             }
             nameTag.innerText = rivalName;

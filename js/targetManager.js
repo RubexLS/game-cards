@@ -122,7 +122,6 @@ export function initTargetListener() {
             }
         }
 
-        const { recordUsage } = await import('./state.js');
         recordUsage();
 
         // Remueve el virus de la mano del jugador
@@ -148,7 +147,6 @@ export function initTargetListener() {
 
         renderHandPlayer(tempHand, handTemp);
 
-        //------------------------------------------------
         const propietarioLabels = {
             'bodyOrange': 'Cuerpo Naranja 🍊', 'bodyBlue': 'Cuerpo Azul 💧', 'bodyRed': 'Cuerpo Rojo 🔥', 'bodyYellow': 'Cuerpo Amarillo ⚡', 'bodyGreen': 'Cuerpo Verde 🌿'
         };
@@ -156,7 +154,6 @@ export function initTargetListener() {
             'bone': 'Huesos', 'brain': 'Cerebro', 'heart': 'Corazón', 'stomach': 'Estómago', 'nervousSystem': 'Sist. Nervioso'
         };
         const textoObjetivo = `${organoLabels[targetOrganName] || targetOrganName} de ${propietarioLabels[targetBodyKey] || 'un rival'}`;
-        // ------------------------------------------------
 
         const hasWon = checkBodyVictory(targetBody);
         let updateData = { 

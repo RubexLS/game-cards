@@ -38,11 +38,37 @@ firebaseMock.listenMatch(GAME_ID, (gameData) => {
 });
 
 const inputPlayerName = document.getElementById('nickname');
+if (inputPlayerName) {
+    inputPlayerName.addEventListener('input', async () => {
+        // Solo actualiza si el jugador ya ha reclamado un personaje en la sala
+        if (!preliminarySelection) return; 
+
+        const rawName = inputPlayerName.value.trim();
+        const cleanNickname = rawName.length > 0 ? rawName : `Jugador_${preliminarySelection.id}`;
+
+        const gameData = await firebaseMock.getGame(GAME_ID);
+        let currentNames = gameData?.playerNames ? gameData.playerNames : {};
+
+        // Actualiza el nodo del nombre dinámicamente
+        currentNames[preliminarySelection.id] = cleanNickname;
+
+        await firebaseMock.updateGame(GAME_ID, { 
+            playerNames: currentNames 
+        });
+    });
+}
 
 async function processCharacterBlock(currentSelection) {
     // Captura el nombre ingresado o asignar uno por defecto si está vacío
     const rawName = inputPlayerName ? inputPlayerName.value.trim() : "";
-    const cleanNickname = rawName.length > 0 ? rawName : `Jugador_${currentSelection.id}`;
+    const defaultNames = {
+        'playerO': 'Jugador Naranja 🍊',
+        'playerB': 'Jugador Azul 💧',
+        'playerR': 'Jugador Rojo 🔥',
+        'playerY': 'Jugador Amarillo ⚡',
+        'playerG': 'Jugador Verde 🌿'
+    };
+    const cleanNickname = rawName.length > 0 ? rawName : (defaultNames[currentSelection.id] || "Jugador");
 
     const gameData = await firebaseMock.getGame(GAME_ID);
     let notAvailable = gameData?.unavailablePlayers ? gameData.unavailablePlayers : [];

@@ -58,10 +58,16 @@
 #bionic-slot   { grid-column: 2 / 3; grid-row: 3 / 4; background-image: url(../assets/board/arm_slot.png); height: 100%; width: 100%; }
 
 /* --- FILAS DE LOS CONTENDORES DE LOS RIVALES --- */
-.rivalOne   { grid-row: 1 / 2; background-color: rgba(30, 14, 206, 0.2); }
-.rivalTwo   { grid-row: 2 / 3; background-color: rgba(231, 76, 60, 0.2); }
-.rivalThree { grid-row: 3 / 4; background-color: rgba(206, 232, 12, 0.2); }
-.rivalFour  { grid-row: 4 / 5; background-color: rgba(7, 234, 11, 0.2); }
+.rivalOne   { grid-row: 1 / 2; }
+.rivalTwo   { grid-row: 2 / 3; }
+.rivalThree { grid-row: 3 / 4; }
+.rivalFour  { grid-row: 4 / 5; }
+
+.bodyOrange { background-color: rgba(230, 126, 34, 0.2) !important; border-color: rgba(230, 126, 34, 0.5) !important; }
+.bodyBlue   { background-color: rgba(30, 14, 206, 0.2) !important;  border-color: rgba(30, 14, 206, 0.5) !important; }
+.bodyRed    { background-color: rgba(231, 76, 60, 0.2) !important;  border-color: rgba(231, 76, 60, 0.5) !important; }
+.bodyYellow { background-color: rgba(206, 232, 12, 0.2) !important;  border-color: rgba(206, 232, 12, 0.5) !important; }
+.bodyGreen  { background-color: rgba(7, 234, 11, 0.2) !important;   border-color: rgba(7, 234, 11, 0.5) !important; }
 
 .rivalOne, .rivalTwo, .rivalThree, .rivalFour {
     display: grid;
@@ -75,6 +81,8 @@
     border: 2px solid rgba(255, 255, 255, 0.2);
     align-items: center; 
     justify-items: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .bodyPlayers .organSlot { background-color: rgba(0, 0, 0, 0.6); }
@@ -105,4 +113,22 @@
     height: 100%;
     width: 100%;
     gap: 10px;
+}
+
+/* tag de nicknames */
+
+.rival-nickname-tag{
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    margin: 0;
+    color: #fff;
+    font-family: monospace;
+    font-size: 13px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 3px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }

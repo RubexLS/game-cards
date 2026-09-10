@@ -157,7 +157,6 @@ export async function useCard(cardIndex) {
             updateData.winner = HAND_KEY;
         }
 
-        // Subida única y sólida a Firebase
         await firebaseMock.updateGame(GAME_ID, updateData);
     }else if(selectedCard.type === 'virus'){
         // Guarda la carta seleccionada y su posición en la mano

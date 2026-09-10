@@ -31,7 +31,7 @@
     z-index: 99999;
     width: 110px;
     height: 42px;
-    background-color: #9d3636;
+    background-color: #000000;
     color: white;
     font-weight: bold;
     border: 2px solid #ffffff;
@@ -46,6 +46,14 @@
     background-color: #c0392b;
 }
 
+.card.is-selected {
+    box-shadow: 0 0 15px 5px #f1c40f !important; /* Brillo dorado */
+    transform: translateY(-10px) scale(1.05); /* Se eleva y agranda ligeramente */
+    z-index: 10; /* Asegura que quede por encima de las cartas de al lado */
+    transition: all 0.2s ease-in-out;
+}
+
+
 .option:disabled {
     background-color: #7f8c8d;
     border-color: #bdc3c7;
@@ -54,13 +62,20 @@
 }
 
 .use {
-    bottom: 16%;
-    left: 52%;
+    bottom: 30%;
+    left: 26%;
 }
 
 .discard {
-    bottom: 6%;
-    left: 52%;
+    bottom: 30%;
+    left: 46%;
+}
+
+.help{
+    bottom: 30%;
+    left: 36%;
+    background-color: #ffffff;
+    font-size: 20px;
 }
 
 /* Clase que se aplica al contenedor del rival ausente */

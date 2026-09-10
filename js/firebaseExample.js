@@ -1,5 +1,5 @@
 import { initializeApp } from "www.gstatic.com/";
-import { getFirestore, doc, getDoc, updateDoc, onSnapshot } from "www.gstatic.com/";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "www.gstatic.com/";
 
 const firebaseConfig = {
 

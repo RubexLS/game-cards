@@ -171,4 +171,19 @@
     .green{
         background-size: 100% 100%;
     }
+
+    .use {
+        bottom: 55%;
+        left: 5%;
+    }
+
+    .discard {
+        bottom: 55%;
+        left: 69%;
+    }
+
+    .help{
+        bottom: 55%;
+        left: 37%;
+    }
 }

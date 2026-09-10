@@ -1,4 +1,4 @@
-import { gameState, HAND_KEY, BODY_KEY, GAME_ID, checkBodyVictory } from './state.js';
+import { gameState, HAND_KEY, BODY_KEY, GAME_ID, checkBodyVictory, recordUsage } from './state.js';
 import { firebaseMock } from './firebaseMock.js';
 import { renderHandPlayer, renderHand } from './ui.js';
 import { handTemp } from './domElements.js';

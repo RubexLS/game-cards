@@ -104,8 +104,8 @@ export function updateCentralActionPanel(gameState, localHandKey) {
             
             historyContainer.insertBefore(newLine, historyContainer.firstChild);
 
-            // Mantener un tope máximo de 3 mensajes visibles para evitar desbordes
-            while (historyContainer.children.length > 3) {
+            // Mantener un tope máximo de 1 mensaje visible para evitar desbordes
+            while (historyContainer.children.length > 1) {
                 historyContainer.removeChild(historyContainer.lastChild);
             }
         }

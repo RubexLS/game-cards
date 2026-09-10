@@ -168,9 +168,10 @@
     border-radius: 4px;
     padding: 6px 8px;
     height: 52px;
-    overflow-y: auto;
+    overflow: hidden;
     display: flex;
-    flex-direction: column-reverse; /* Hace que lo nuevo aparezca arriba empujando lo viejo */
+    align-items: center;
+    justify-content: center;
     box-sizing: border-box;
 }
 
@@ -181,14 +182,17 @@
 
 /* Líneas de texto individuales dentro del historial */
 .historial-acciones p {
-    margin: 2px 0;
+    margin: 0;
     font-size: 11px;
     color: #ecf0f1;
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    text-overflow: clip;
+    overflow: visible;
+    word-break: break-word; /* Permite que las palabras largas se dividan y no desborden */
+    text-align: center;        /* Centra el bloque de texto */
+    width: 100%;    
     animation: modoEntradaTexto 0.2s ease-out; /* Micro-animación de entrada */
 }
 

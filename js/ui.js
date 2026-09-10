@@ -30,6 +30,12 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             if (!options) return;
             options.innerHTML = '';
 
+            const previouslySelected = contenedorHTML.querySelector('.card.is-selected');
+            if (previouslySelected) {
+                previouslySelected.classList.remove('is-selected');
+            }
+            cardDiv.classList.add('is-selected');
+
             const enabled = !usedCardsTurn && !inDrawPhase;
 
             const btnUse = document.createElement('button');
@@ -41,8 +47,23 @@ export function renderHandPlayer(currentPLayer, contenedorHTML) {
             btnDiscard.className = 'option discard'; 
             btnDiscard.innerText = 'Descartar';
             btnDiscard.disabled = inDrawPhase;
+
+            const btnHelp = document.createElement('button');
+            btnHelp.className = 'option help'; 
+            btnHelp.innerText = '❓';
+            btnHelp.style.cursor = 'pointer';
             
-            options.appendChild(btnUse); options.appendChild(btnDiscard);
+            options.appendChild(btnUse); options.appendChild(btnDiscard); options.appendChild(btnHelp);
+
+            btnHelp.addEventListener('click', (e) => {
+                e.stopPropagation(); // Evita que se disparen otros clicks de la UI
+    
+                // Obtenemos la descripción de la carta (si no tiene, ponemos un texto por defecto)
+                const infoText = card.description || "Esta carta te permite interactuar en el tablero según su tipo.";
+    
+                // Mostramos un alert nativo del navegador con las reglas
+                alert(`📖 REGLAS DE LA CARTA:\n\n${infoText}`);
+            });
 
             btnDiscard.addEventListener('click', async () => { 
                 options.innerHTML = ''; 

@@ -21,7 +21,7 @@
 }
 
 /* AJUSTES PARA CELULARES (Pantallas menores a 768px) */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
     /*nuevo mapeo de las secciones*/
     .game-container {
         display: grid;
@@ -185,5 +185,188 @@
     .help{
         bottom: 55%;
         left: 37%;
+    }
+}
+
+@media (min-width: 480px) and (max-width: 900px) {
+    .historial-acciones{
+        height: 100px;
+    }
+
+    .historial-acciones p{
+        font-size: 20px !important;
+    }
+
+    .indicador-turno{
+        font-size: 20px;
+    }
+
+    /*nuevo mapeo de las secciones*/
+    .game-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        /* Fila 1: Tablero central | Fila 2: Tus órganos | Fila 3: Tu mano de cartas */
+        grid-template-rows: 1fr 0.4fr;
+        height: 100vh;
+        width: 100vw;
+        gap: 10px;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    /* tablero */
+    .map-game {
+        grid-row: 1 / 2; 
+        display: grid;
+        grid-template-rows: 0.4fr 0.8fr 0.7fr; /* Mano del oponente arriba, tablero abajo (borrar cuando se termine)*/
+        gap: 10px;
+        height: 100%;
+        min-height: 0; /* Evita que la sección colapse o se aplaste */
+    }
+
+    .board {
+        height: 100%;
+        padding: 10px;
+    }
+
+    /* mano  */
+    .player-hand-cards {
+        grid-row: 3 / 4; 
+        height: 100%;   
+    }
+
+    .hand {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    /* Reducción del abanico en móvil para evitar desbordes */
+    .left-card { margin-right: -15px; transform: rotate(-5deg); }
+    .right-card { margin-left: -15px; transform: rotate(5deg); }
+
+    .player-hand-cards .card:hover {
+        transform: translateY(-15px) scale(1.08); 
+    }
+
+    .card-slot, .card {
+        width: 150px;  
+        height: 210px;
+        font-size: 0.9rem;
+    }
+
+    /* cuerpo del jugador local*/
+    .bodyGame {
+        grid-row: 2 / 3 !important;
+        display: grid !important;                     /* Cambiado de flex a grid */
+        grid-template-columns: repeat(6, 1fr) !important; /* Crea las 3 columnas */
+        grid-template-rows: repeat(1, 1fr) !important;
+        justify-items: center !important;             /* Centra los iconos horizontalmente */
+        align-items: center !important;               /* Centra los iconos verticalmente */
+        gap: 12px !important;                         /* Un poco más de espacio entre filas/columnas */
+        width: 100% !important;
+        height: auto !important;
+        padding: 5px 0 !important;
+    }
+
+    .bodyGame .organSlot {
+        width: 100% !important;
+        max-width: 90px !important;   /* Aumentado de 65px a 85px para que se vean más grandes */
+        aspect-ratio: 5 / 7 !important;
+        background-size: 100% 100% !important;
+        min-height: 200px !important;
+        height: 100% !important;
+    }
+
+    #brain-slot    { grid-column: 1 / 2; grid-row: 1 / 2 }   
+    #heart-slot    { grid-column: 2 / 3; grid-row: 1 / 2 }
+    #stomach-slot  { grid-column: 3 / 4; grid-row: 1 / 2 }
+    #bone-slot     { grid-column: 4 / 5; grid-row: 1 / 2 }
+    #nervous-slot  { grid-column: 5 / 6; grid-row: 1 / 2 }
+    #bionic-slot   { grid-column: 6 / 7; grid-row: 1 / 2 }
+
+    /* pestaña desplazable */
+    .toggle-btn {
+        display: block;
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        z-index: 10000;
+        background-color: #e74c3c;
+        color: white;
+        border: 2px solid white;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .bodyRivals {
+        position: fixed;
+        top: 0;
+        right: -100%; /* Totalmente oculto a la derecha por defecto */
+        width: 90%;   
+        max-width: 600px;
+        height: 100vh;
+        background-color: rgba(26, 37, 47, 0.98); 
+        z-index: 9999;
+        padding: 60px 15px 20px 15px; 
+        box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+        transition: right 0.3s ease-in-out; 
+    }
+
+    /* Clase activa que se dispara con el JavaScript */
+    .bodyRivals.active {
+        right: 0; 
+    }
+
+    .bodyPlayers {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .rivalOne, .rivalTwo, .rivalThree, .rivalFour {
+        grid-template-columns: repeat(6, 1fr);
+        padding: 6px;
+        gap: 4px;
+    }
+
+    .rivalOne .organSlot, .rivalTwo .organSlot, 
+    .rivalThree .organSlot, .rivalFour .organSlot {
+        max-width: 80px; 
+    }
+
+    /* reajuste de avatars */
+
+    .selectPlayer{
+        height: 250px;
+        width: 85%;
+    }
+
+    .orange,
+    .blue,
+    .red,
+    .yellow,
+    .green{
+        background-size: 100% 100%;
+    }
+
+    .use {
+        bottom: 52%;
+        left: 22%;
+    }
+
+    .discard {
+        bottom: 52%;
+        left: 64%;
+    }
+
+    .help{
+        bottom: 52%;
+        left: 43%;
     }
 }
